@@ -65,3 +65,5 @@ base <- read_excel("Bases de datos/Base_de_datos_1.xlsx")
 ## esta la forma directa y que se puede volver a reproducir facilmente
 
 base <- read_excel(file.choose()) ## Esta es la forma mas sencilla
+
+?prop.table
