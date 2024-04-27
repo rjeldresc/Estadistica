@@ -30,3 +30,21 @@ barplot(Puntuacion, col = "lightblue", main="Puntuacion", xlab = "Tareas", ylab 
 
 #guardar los datos en un txt
 write.table(datos, file = "datos.txt")
+
+
+#para conexion con sql server
+install.packages("odbc")
+library(odbc)
+# Establecer la conexión
+con <- dbConnect(odbc(),
+                 Driver = "ODBC Driver 17 for SQL Server",
+                 Server = "DESKTOP-NKC9QNV",
+                 Database = "bbdd_conversion",
+                 UID = "rodrigo",
+                 PWD = "enter")
+
+result <- dbGetQuery(con, "SELECT * FROM CampoParametros")
+
+print(result)
+dbDisconnect(con)
+
