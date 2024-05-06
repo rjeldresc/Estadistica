@@ -127,3 +127,7 @@ p2<-plot(x2,mujeres)
 par(mfrow=c(1,2))
 p1<-plot(x1,hombres)
 p2<-plot(x2,mujeres)
+
+corrp
+
+sd()
