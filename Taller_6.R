@@ -44,7 +44,6 @@ addmargins(A3,1)
 
 
 ##### EJEMPLO 3 #####
-#setwd("C:/Users/caroh/Documents/RStudio/Clases/Clase 6")
 setwd("d:/dev/Estadistica")
 load(file="Estudiantes.Rdata")
 
