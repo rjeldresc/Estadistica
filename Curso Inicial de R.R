@@ -522,5 +522,39 @@ names(df)[names(df) == "tiene_cuenta_corriente"] <- "tiene_TC"
 rbind(df, nuevo_df) #hace el match por los nombres
 
 
+#mini taller
+
+temp <- rnorm(n=100, mean = 21, sd =8)
+N <- length(temp)
+dia <- rep(c("L", "M", "W", "J", "V", "S", "D"), length.out = 100)
+
+#e1 <- rep(c("E1"), N/3)
+#e2 <- rep(c("E2"), N/3)
+#e3 <- rep(c("E3"), N - (length(e1) + length(e2)))
+#est <- c(e1, e2, e3)
+
+#otra forma (NO FUNCIONA)
+#rep(c("E1", "E2", "E3"), each = c(N/3, N/3, N/3+1))
+
+est <- rep(c("E1", "E2", "E3"), times = c(33, 33, 34))
+
+lluvia <- temp<20
+lluvia
+
+#crear un data frame
+precipitaciones <- data.frame(Temperatura = temp,
+                              Dia_semana = dia, 
+                              Estacion = est,
+                              Llueve = lluvia
+                              )
+
+head(precipitaciones, 15) #los primeros n registros
+tail(precipitaciones, 15) #los ultimos 15 registros
+
+summary(precipitaciones)
+
+
+
+
 
 
