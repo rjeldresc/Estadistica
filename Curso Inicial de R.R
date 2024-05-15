@@ -1,7 +1,12 @@
 
-# curso de R 
+# curso de R (Programaci√≥n en R)
 
 setwd("d:/dev/Estadistica")
+
+
+sum(c(1,2))
+
+
 
 x<-50
 y<-10
@@ -149,6 +154,7 @@ v3[8] #usando la posicion
 #para varias posiciones
 v3[c(1,4)]
 
+
 #para 3:5 , retorna la secuencia 3,4,5
 
 v3[c(1:7)]
@@ -200,7 +206,7 @@ length(v3)
 #para omitir el de la posicion 4
 v3[-4]
 v3[-c(1,7)] #omite todos los elementos excepto posicion 1 y 7
-v3[-which.max(v3)] #consultar el vector sin el m·ximo valor
+v3[-which.max(v3)] #consultar el vector sin el m?ximo valor
 
 #operador %in%
 #vector_a %in% vector_b retorna vector del largo del vector a
@@ -258,7 +264,7 @@ grepl("ala", "palabra") #buscar parte de una palabra si esta contenida en otra
 
 gsub("ala", "olo", "palabra") #reemplaza una cosa por otra
 
-gsub("hola", "xx", c("hola buen dÌa", "como estas", "que tal"))
+gsub("hola", "xx", c("hola buen d?a", "como estas", "que tal"))
 
 #https://www.tidytextmining.com/
 
