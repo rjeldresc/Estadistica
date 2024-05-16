@@ -560,7 +560,40 @@ tail(precipitaciones, 15) #los ultimos 15 registros
 summary(precipitaciones)
 
 
+dbinom(6, 10, 0.3)
+
+qgeom(0.7, 4)
+
+1-phyper(2, m = 80, n = 920, k = 20) 
 
 
 
 
+
+# Crear un dataframe con datos cualitativos nominales
+set.seed(123)  # Para reproducibilidad
+n <- 100
+datos <- data.frame(
+  Categoria = sample(letters[1:10], n, replace = TRUE)
+)
+
+# Calcular la frecuencia de cada categoría
+frecuencia <- table(datos$Categoria)
+
+# Ordenar las categorías por frecuencia descendente
+frecuencia_ordenada <- sort(frecuencia, decreasing = TRUE)
+
+# Calcular el porcentaje acumulado
+porcentaje_acumulado <- cumsum(prop.table(frecuencia_ordenada)) * 100
+
+# Crear el gráfico de Pareto
+par(mar = c(5, 5, 4, 2) + 0.1)
+barplot(frecuencia_ordenada, main = "Gráfico de Pareto",
+        xlab = "Categoría", ylab = "Frecuencia",
+        col = rainbow(length(frecuencia_ordenada)))
+par(new = TRUE)
+plot(porcentaje_acumulado, type = "b", col = "blue", pch = 19, axes = FALSE, ylim = c(0, 100))
+axis(side = 4, ylim = c(0, 100), col = "blue", col.axis = "blue", las = 1)
+mtext("Porcentaje Acumulado", side = 4, line = 3, col = "blue")
+legend("topright", legend = c("Frecuencia", "Porcentaje Acumulado"),
+       col = c("black", "blue"), lty = c(1, 1), pch = c(15, 19))
