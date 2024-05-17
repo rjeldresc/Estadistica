@@ -138,3 +138,8 @@ ggplot(base,aes(Ingreso_Anual, fill=Sucursal)) + geom_density(alpha=0.7)
 library(GGally)
 GGally::ggpairs(base) 
 #grafica en forma de matriz un set de datos con múltiples variables, el resultado es una correlación de las variables.
+
+
+library(plotly)    
+fig <- plot_ly(x = ~rnorm(50), type = "histogram") 
+fig
