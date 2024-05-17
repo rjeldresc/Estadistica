@@ -103,4 +103,19 @@ data_frame <- data.frame(
 # Mostrar el data frame
 print(data_frame)
 
+setwd("d:/dev/Estadistica")
+getwd()
+
+library(readxl)
+library(openxlsx)
+
+readxl::read_excel()
+openxlsx::read.xlsx()
+
+?read_excel
+
+base <- readxl::read_excel(file.choose()) #aparece un cuadro de dialogo para buscar el archivo
+base <- readxl::read_excel(path = "Base_de_datos_1.xlsx") #Importar y definir base de datos
+attach(base) #para reconocer por el nombre las columanas importadas
+
 
