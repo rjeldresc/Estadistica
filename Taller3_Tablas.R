@@ -99,8 +99,11 @@ quantile(Ingreso_Anual) # cuartiles de una variable
 var(Ingreso_Anual)  # varianza
 sd(Ingreso_Anual)/mean(Ingreso_Anual)  # coeficiente de variación
 range(Ingreso_Anual)   # rango de la variable
+library(moments)
+kurtosis(Ingreso_Anual)
 summary(Ingreso_Anual)  # resumen 5 números y media
 tapply(Ingreso_Anual, Sexo, summary) # resumen del ingreso anual 5 números y media, por sexo
+tapply(Ingreso_Anual, Sucursal, summary)
 
 #Otra forma:
 library(psych)
@@ -109,7 +112,7 @@ psych::describeBy(Ingreso_Anual,group=Sexo) # separado por categorías
 
 #Recordatorio para guardar tablas
 library(openxlsx)
-write.xlsx(tabla_resumen, "tablaresumen.xlsx") #en xlsx
+write.xlsx(tabla_resumen$mean, "tablaResumen.xlsx") #en xlsx
 
 
 ############## FILTRAR Y AGREGAR VARIABLES ##############
@@ -118,12 +121,16 @@ mayores <- base[Edad > 60, ]   #selecciona solo personas mayores y guarda en "ma
 suc_A <- base[Sucursal=="A", ] #selecciona solo sucursal A y guarda en "suc_A"
 
 #Filtro:forma 2
+library(dplyr)
 sucursal_A <- filter(base, Sucursal == "A") #selecciona solo sucursal A
+sucursal_A_60 <- filter(base, Sucursal == "A", Edad > 60) #selecciona solo sucursal A , edad mayor a 60
+
 
 ############## AGREGAR NUEVA VARIABLE A LA BASE ##############
-base <- base %>% mutate(Edad_cod = case_when(Edad <= 30 ~ "Joven",
-                                               Edad <= 60 ~ "Adulto",
-                                               Edad > 60 ~ "Mayor" )) 
+base <- base %>% 
+        mutate(Edad_cod = case_when(Edad <= 30 ~ "Joven",
+                                    Edad <= 60 ~ "Adulto",
+                                    Edad > 60 ~ "Mayor" )) 
 attach(base)  # volver a apoderarse de la base con variable nueva
 names(base)   # para ver los nombres las variables incluidas en la base
 
