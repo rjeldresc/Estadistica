@@ -7,7 +7,7 @@
 #install.packages("vioplot") #de violin
 #install.packages("GGally")
 
-setwd("d:/dev/Estadistica/")
+setwd("d:/dev/Estadistica/Taller 3  - ejemplo gráficos (script)-20240516/")
 
 #setwd("C:/Users/caroh/Documents/RStudio/Clases/Clase 3") #Definición de directorio de trabajo
 
@@ -23,42 +23,66 @@ hist(Ingreso_Anual,main="Histograma",xlab="Ingresos",ylab="Frecuencia",col="gree
 hist(Ingreso_Anual,main="Histograma",xlab="Ingresos",col="green",density=20,freq=FALSE) #entrega la probabilidad de densidad
 
 #recordatorio de como guardar gráficos
-png(filename = paste0(getwd(),"Histograma.png"), width = 800, height=600)#para crear archivo png 
+png(filename = paste0(getwd(),"/", "Histograma.png"), width = 800, height=600)#para crear archivo png 
 hist(Ingreso_Anual,main="Histograma",xlab="Ingresos",ylab="Frecuencia",col="green",density=20,freq=TRUE)
 dev.off() #para cerrarla funcion decrear archivo png
 
 #otro tipo de histograma
-library(ggplot2) 
+library(ggplot2)
 ggplot(base,aes(x=Ingreso_Anual))+geom_histogram()
+
+ggplot(base) +
+  geom_histogram(aes(x=Ingreso_Anual)) #la misma instruccion anterior, escrito de otra forma
+
+#aes permite indicar que pondremos en los ejes, además agregar capas adicionales
+
+
 ggplot(base,aes(x=Ingreso_Anual,color=Sexo))+geom_histogram()
+
 ggplot(base,aes(x=Ingreso_Anual,color=Sexo,fill=Sexo))+geom_histogram()
 ggplot(base,aes(x=Ingreso_Anual,color=Sexo,fill=Sexo))+geom_histogram(alpha=0.1) #transparencia
 ggplot(base,aes(x=Ingreso_Anual,color=Sexo,fill=Sexo))+geom_histogram(alpha=0.3,bins=10) #10 clases o rangos
 ggplot(base,aes(x=Ingreso_Anual,color=Sexo,fill=Sexo))+geom_histogram(alpha=0.3,bins=10, binwidth=5000) #ancho de barra
 ggplot(base,aes(x=Ingreso_Anual,color=Sexo,fill=Sexo))+geom_histogram(apha=0.3,bins=10,binwidth=5000, position = "identity") 
-ggplot(base,aes(x=Ingreso_Anual,color=Sexo,fill=Sexo))+geom_histogram(alpha=0.3,bins=10,binwidth=5000, position = "stack")
+ggplot(base,aes(x=Ingreso_Anual,color=Sexo,fill=Sexo))+
+  geom_histogram(alpha=0.3,bins=10,binwidth=5000, position = "stack") + 
+  theme(legend.position = "bottom")
 
 #interactivo
 library(plotly)    
-plot_ly(base, x = ~Ingreso_Anual, type = "histogram") 
+plot_ly(base, x = ~Ingreso_Anual, type = "histogram")
 
 ##############  Barras  ##############
 t1 <- table(Sucursal) 
 t2 <- round(prop.table(t1)*100,1) #frecuencia relativa porcentual
 barplot(t2, col= "lightblue", main="Sucursales (%)", xlab = "Sucursales", ylab="%")
 barplot(t1,legend.text=rownames(t1), main="Barras",ylab ="Frecuencias", font.axis=5) #leyenda y titulo y nombre eje y y cambio fuente
-barplot(t1,legend.text=rownames(t1),main="Barras",ylab ="Frecuencias",col=rainbow(4)) #color de las barras
+barplot(t1,legend.text=rownames(t1),main="Barras",ylab ="Frecuencias",col=rainbow(5)) #color de las barras
 barplot(t1,legend.text=rownames(t1),main="Barras",ylab ="Frecuencias", col=rainbow(4),ylim=c(0,300), xlim=c(0,5)) #limites eje y. xlim=tamaño eje x
-
+?barplot
 t3<- table(Sucursal,Sexo)  
 barplot(t3,beside=TRUE,legend.text=rownames(t2),col=rainbow(4)) #beside para apilar
 barplot(t3,beside=FALSE,legend.text=rownames(t2),col=rainbow(4)) 
+barplot(t3,beside=T,col=rainbow(4) , xlim = c(0,15)) 
+legend("topright", legend = rownames(t2), fill = rainbow(4))
 
 #Otro tipo de graf barras
-ggplot(base,aes(x=Sexo,fill=Sucursal))+geom_bar()
-ggplot(base,aes(x=Sexo,fill=Sucursal))+geom_bar(width=0.8)+theme_light() #ancho de barra y color de fondo
+ggplot(base,aes(x=Sexo,fill=Sucursal))+
+  geom_bar(position = "dodge")
+
+ggplot(base,aes(x=Sexo,fill=Sucursal))+
+  geom_bar()
+
+ggplot(base,aes(x=Sexo,fill=Sucursal))+
+  geom_bar(position = "dodge", width=0.8)+
+  theme_dark()
+
+ggplot(base,aes(x=Sexo,fill=Sucursal))+
+  geom_bar(width=0.8)+
+  theme_light() #ancho de barra y color de fondo
 
 #interactivo
+library(dplyr)
 tabla_plot <- data.frame(
   Sucursales = names(table(Sucursal)),
   Total = as.numeric(table(Sucursal)),
@@ -79,7 +103,7 @@ pie(t2, main="Sucursales", clockwise = TRUE, labels = paste0(rownames(t2), " = "
 
 library(plotrix)
 pie3D(t2, main="Sucursales", labels =  paste0(rownames(t2), " = ", paste0(t2, "%")))  
-pie3D(t2, main="Sucursales", labels =  paste0(rownames(t2), " = ", paste0(t2, "%")),explode =0.1)  # explode = separa los sectores
+pie3D(t2, main="Sucursales", labels =  paste0(rownames(t2), " = ", paste0(t2, "%")),explode =0.2, labelcex=1.2, radius=1.3)  # explode = separa los sectores
 
 #interactivo
 plot_ly(data = tabla_plot, labels = ~Sucursales, values = ~Total, type = "pie")
@@ -90,9 +114,14 @@ boxplot(Ingreso_Anual ~ Sexo, col="lightblue", main="Distribución de Ingresos")
 boxplot(Ingreso_Anual ~ Sexo, col="cyan", main="Distribución de Ingresos", horizontal=TRUE)#horizontal
 
 #otro tipo de graf de caja
-ggplot(base,aes(x = Sexo, y = Ingreso_Anual, fill = Sexo)) + geom_boxplot(outlier.colour="red") +
+ggplot(base,aes(x = Sexo, y = Ingreso_Anual, fill = Sexo)) + geom_boxplot()
+  
+ggplot(base,aes(x = Sexo, y = Ingreso_Anual, fill = Sexo)) + 
+  geom_boxplot(outlier.colour="red") +
   stat_summary(fun.y = "mean", geom = "point", shape = 20, size = 3)+ 
-  ggtitle("Grafico de cajas") +  xlab("Sexo") +  ylab("Ingreso anual") + 
+  ggtitle("Grafico de cajas") +  
+  xlab("Sexo") +  
+  ylab("Ingreso anual") + 
   theme_bw()    # size = tamaño legenda
 
 #interactivo
