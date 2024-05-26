@@ -12,6 +12,7 @@ base <- readxl::read_excel("Base_Taller3.xlsx", sheet = "Parte8a") #Importar y d
 attach(base) #para reconocer por el nombre las columanas importadas
 
 
+
 ##############  GRÁFICO MARIMEKKO (MOSAICO)  ##############
 ggplot(base) +
   geom_mosaic(aes(x = product(Area,Sexo)), fill = "lightblue",color = "black")
@@ -21,7 +22,10 @@ ggplot(base) +
 
 #otro ejemplo
 base2 <- readxl::read_excel("Base_Taller3.xlsx", sheet = "Parte8b")
-attach(base2) 
+attach(base2)
+nrow(base2)
+base2 <- dplyr::filter(base2, Afecta != "Sin dato")
+nrow(base2)
 
 ggplot(base2) +
   geom_mosaic(aes(x = product(Afecta, Región), fill = Afecta))

@@ -27,7 +27,7 @@ parcoord(datos1)
 parcoord(datos1, var.label = TRUE)    #agrega mínimos y máximos 
 cols <- as.factor(Sexo) #transforma a una nueva categoria para poder clasificar   
 parcoord(datos1, var.label = TRUE, col=cols)   # solo? dos colores (sexo)
-legend("topleft", legend = levels(as.factor(Sexo)))
+legend("topleft", legend = levels(as.factor(Sexo))) #factor lo pasa a "niveles", y lo transforma e niveles
 
 datos2 <- base[, 3:6]
 parcoord(datos2)
@@ -40,3 +40,4 @@ parcoord(datos2, var.label = TRUE, col=cols) # un color por alumno
 ggplot(base, aes(x =I2)) +geom_dotplot()
 ggplot(base, aes(x =I2)) +geom_dotplot(fill = "steelblue")
 
+ggplot(base, aes(x =I2, fill = Sexo)) +geom_dotplot()
