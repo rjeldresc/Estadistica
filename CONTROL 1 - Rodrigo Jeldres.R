@@ -131,7 +131,7 @@ datos_resumidos <- baseinicial %>%
   group_by(AÑO, ESPECTACULOS) %>%
   summarise(TOTAL_ESPECTAC = sum(TOTAL_ESPECTAC, na.rm = TRUE))
 
-ggplot(datos_resumidos, aes(x = AÑO, y = TOTAL_ESPECTAC, color = rainbow())) +
+ggplot(datos_resumidos, aes(x = AÑO, y = TOTAL_ESPECTAC, color = ESPECTACULOS)) +
   geom_line(size = 1) +
   labs(title = "Trayectoria de los Tipos de Espectáculos (2014-2019)",
        x = "Año",
