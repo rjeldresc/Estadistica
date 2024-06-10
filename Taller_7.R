@@ -232,6 +232,18 @@ lambda <- 1.5  #Tasa de eventos por unidad de tiempo o espacio = 3*0.5 en 1/2 hr
 x <- 1 #números de eventos posibles 
 1-dpois(x, lambda)
 
+# Parámetro lambda para media hora
+lambda <- 1.5
+
+# Probabilidad de tener menos de 2 infracciones (0 o 1)
+prob_less_than_2 <- ppois(1, lambda)
+
+# Probabilidad de tener al menos 2 infracciones
+prob_at_least_2 <- 1 - prob_less_than_2
+
+# Imprimir el resultado
+prob_at_least_2
+
 ######## Ejercicio 3 ########
 # Un laboratorio que trabaja 24 × 7 recibe muestras de PCR para su análisis. Suponga que las últimas 1.000
 # muestras analizadas presentaron una positividad del 8% 
