@@ -1,0 +1,7 @@
+"     Edad" "Sucursal" "Ingreso_Anual" "Bienes" "  Tarjetas" "  Crédito" "Solicitud" "Sexo"
+"" "Min.   :18.00  " "A: 96  " "Min.   : 5014  " "NO:304  " "Length:598        " "Length:598        " "NO:324  " "0:299  "
+"" "1st Qu.:30.00  " "B:173  " "1st Qu.:17253  " "SI:294  " "Class :character  " "Class :character  " "SI:274  " "1:299  "
+"" "Median :42.00  " "C:268  " "Median :24925  " NA "Mode  :character  " "Mode  :character  " NA NA
+"" "Mean   :42.41  " "D: 61  " "Mean   :27571  " NA NA NA NA NA
+"" "3rd Qu.:55.75  " NA "3rd Qu.:36241  " NA NA NA NA NA
+"" "Max.   :67.00  " NA "Max.   :63130  " NA NA NA NA NA

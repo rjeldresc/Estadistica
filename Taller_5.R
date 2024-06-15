@@ -5,10 +5,8 @@
 install.packages("openxlsx") #para exportar a excel
 #install.packages("gridExtra")
 
-
-
-#setwd("C:/Users/caroh/Documents/RStudio/Clases/Clase 4") #Definición de directorio de trabajo
 setwd("d:/dev/Estadistica")
+
 ######## DOS VARIABLES CATEGÓRICAS ########
 
 #### Crear data frame ####
@@ -26,7 +24,7 @@ t1 <- round(prop.table(tabla)*100,0)
 addmargins(t1)
 
 #### Distribucion porcentual del Tipo, según Estado(Malo, Regular, Bueno) ####
-t2 <- round(prop.table(tabla, margin = 2)*100,0) #número 2,  con respecto a las columanas
+t2 <- round(prop.table(tabla, margin = 2)*100,0) #número 2,  con respecto a las columnas
 addmargins(t2,1) 
 
 #### Distribucion porcentual del Estado(Malo, Regular, Bueno), según Tipo ####
@@ -78,7 +76,7 @@ barplot(t4,
 
 ######## DOS VARIABLES CONTINUAS ########
 base2 <- readxl::read_excel("Base_ejemplo__Bivariada.xlsx", sheet = "parte2") 
-attach(base2) 
+attach(base2)
 
 #Edad
 mean(Edad)  # media
@@ -101,10 +99,12 @@ mujeres <- c(81,67,90,78,81,80,76) #vector con 7 elementos
 
 resultado_hombre <- summary(hombres) 
 resultado_mujeres <- summary(mujeres) 
+resultado_hombre
+resultado_mujeres
 
 #un recordatorio para guardar tablas
-write.xlsx(resultado_hombre, "Resultado.xlsx",sheetName = "Hombres") #en xlsx
-write.xlsx(resultado_mujeres, "Resultado.xlsx",sheetName = "Mujeres") #en xlsx
+#write.xlsx(resultado_hombre, "Resultado.xlsx",sheetName = "Hombres") #en xlsx
+#write.xlsx(resultado_mujeres, "Resultado.xlsx",sheetName = "Mujeres") #en xlsx
 
 #GRÁFICOS
 grupos <- rep(c("Hombres", "Mujeres"), c(9, 7)) #rep(): repite elementos
@@ -127,7 +127,3 @@ p2<-plot(x2,mujeres)
 par(mfrow=c(1,2))
 p1<-plot(x1,hombres)
 p2<-plot(x2,mujeres)
-
-corrp
-
-sd()
