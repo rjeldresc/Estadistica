@@ -33,13 +33,13 @@ ggplot(df, aes(x, prob)) +
        y = "Densidad de Probabilidad (PDF)") +
   theme_minimal()
 
-#P(X<3)
+#P(X>3)
 ggplot(df, aes(x, prob)) +
   geom_area(data = df[df$x > 3, ], fill = "lightblue") +  
-  geom_step(direction = "vh")+
+  geom_step(direction = "vh") +
   labs(title = "Distribución Uniforme Continua",subtitle = "P(X>3)",
        x = "x",
-       y = "Densidad de Probabilidad (PDF)") +
+       y = "Densidad de Probabilidad") +
   theme_minimal()
 
 #graf3
@@ -78,10 +78,9 @@ ggplot(df,aes(x,prob)) +
   theme_minimal()
 
 #P(1<X<2.5)
-
 ggplot(df,aes(x,prob)) +
   geom_line()+
-  geom_area(data=df[df$x >= 1 & df$x <= 2.5, ], fill = "lightblue")+
+  geom_area(data=df[df$x >= 1 & df$x <= 2.5, ], fill = "lightblue") + #para pintar el rango bajo la curva
   labs(title = "Distribución Log Normal",subtitle = "P(1<X<2.5)",
        x = "x",
        y = "Densidad de Probabilidad") +
@@ -104,6 +103,10 @@ proba_acum2 <- 1 - pexp(x,rate = 1, lower.tail = FALSE) #equivalente
 #graf1
 ggdistribution(dexp, x, rate=1, colour = "blue")
 
+#P(X>3)
+ggdistribution(dexp, x, rate=1, colour = "blue", 
+               p = ggdistribution(dexp , seq(3,8,0.001), rate = 1 , fill ="pink"))
+
 #graf2
 df <- data.frame(x, prob)
 
@@ -114,7 +117,7 @@ ggplot(df,aes(x,prob)) +
        y = "Densidad de Probabilidad") +
   theme_minimal()
 
-
+#P(X<1.5)
 ggplot(df,aes(x,prob)) +
   geom_line()+
   geom_area(data=df[df$x <= 1.5, ], fill = "lightblue")+
@@ -140,7 +143,7 @@ cbind(x,prob,prob_acum,proba_acum2)
 
 #graf1
 ggdistribution(dgamma, x, shape=2,rate=1, colour = "blue")
-
+ggdistribution(dgamma, x, shape=10,rate=1, colour = "blue")
 #graf2
 df <- data.frame(x, prob)
 
@@ -168,21 +171,21 @@ ggplot(df,aes(x,prob)) +
 #qweibull  : función cuantil de la distribución weibull
 
 #Ejemplo
-x <- seq(0,4,length.out = 100)
+x_weibull <- seq(0,4,length.out = 100)
 
-prob <- dweibull(x,shape=2,scale=1)
-prob_acum <- pweibull(x,shape=2,scale=1)
-proba_acum2 <- 1 - pweibull(x,shape=2,scale=1, lower.tail = FALSE) #equivalente 
+prob <- dweibull(x_weibull,shape=2,scale=1)
+prob_acum <- pweibull(x_weibull,shape=2,scale=1)
+proba_acum2 <- 1 - pweibull(x_weibull,shape=2,scale=1, lower.tail = FALSE) #equivalente 
 
 #graf1
-ggdistribution(dweibull, x, shape=2,scale=1, colour = "blue")
-
+ggdistribution(dweibull, x_weibull, shape=2,scale=1, colour = "blue")
+ggdistribution(dweibull, x_weibull, shape=10,scale=1, colour = "blue")
 
 #graf2
-ggplot(data.frame(x, prob),aes(x,prob)) +
+ggplot(data.frame(x_weibull, prob),aes(x_weibull,prob)) +
   geom_line()+
   labs(title = "Distribución Weibull",
-       x = "x",
+       x_weibull = "x_weibull",
        y = "Densidad de Probabilidad") +
   theme_minimal()
 
@@ -201,12 +204,12 @@ prob_acum <- pt(x,df=20)
 prob_acum2 <- 1-pt(x,df=20,lower.tail = FALSE)
 
 #graf1
-ggdistribution(dt, x, df=20, colour = "blue")
+ggdistribution(dt, x, df=20, colour = "blue") #df grados de libertad
 
 #graf2
 ggplot(data.frame(x, prob),aes(x,prob)) +
   geom_line()+
-  labs(title = "Distribución Weibull",
+  labs(title = "Distribución T - Student",
        x = "x",
        y = "Densidad de Probabilidad") +
   theme_minimal()
@@ -232,7 +235,7 @@ ggdistribution(dchisq, x, df=5, colour = "blue")
 #graf2
 ggplot(data.frame(x, prob),aes(x,prob)) +
   geom_line()+
-  labs(title = "Distribución Weibull",
+  labs(title = "Distribución chi - cuadrado",
        x = "x",
        y = "Densidad de Probabilidad") +
   theme_minimal()
@@ -254,11 +257,11 @@ prob_acum2 <- 1-pf(x,df1=3, df2=2,lower.tail = FALSE)
 
 #graf1
 ggdistribution(df, x, df1=3, df2=2, colour = "blue")
-
+?ggdistribution
 #graf2
 ggplot(data.frame(x, prob),aes(x,prob)) +
   geom_line()+
-  labs(title = "Distribución Weibull",
+  labs(title = "Distribución F",
        x = "x",
        y = "Densidad de Probabilidad") +
   theme_minimal()
