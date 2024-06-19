@@ -33,7 +33,7 @@ addmargins(datos2)
 A1<- round(prop.table(datos2),2) 
 addmargins(A1)
 
-#Si se considera solo propietarios
+#Si se considera solo propietarios (estan en las columnas)
 A2<- round(prop.table(datos2,2),2) 
 addmargins(A2,1)
 
