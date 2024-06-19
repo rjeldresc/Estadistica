@@ -7,7 +7,7 @@ library(ggplot2)
 #rxxx(n, ...)  # Generador de números aleatorios.
 
 # EJEMPLO - modelo Binomial
-dbinom(3, size=10, prob=0.3)    # calcula probabilidad puntual P(X=3), para 10 ensayos con 0.3 de probabilidad de éxito en cada ensayo 
+dbinom( x = 3, size=10, prob=0.3)    # calcula probabilidad puntual P(X=3), para 10 ensayos con 0.3 de probabilidad de éxito en cada ensayo 
 pbinom(3,size=10,prob=0.3)      # calcula probabilidad acumulada P(X<=3)
 1-pbinom(3,size=10,prob=0.3)    # calcula P(X> 3)
 qbinom(0.5, size=10, prob=0.3)  # determina la mediana p = 0.5
@@ -29,10 +29,15 @@ cbind(x,prob,prob_acum)
 
 ggplot(data.frame(x, prob), aes(x = x, y = prob)) +
   geom_bar(stat = "identity") +
-  labs(x = "Resultados posibles", y = "Probabilidad", title = "Distribución Bernoulli") +
+  labs(x = "Resultados posibles", 
+       y = "Probabilidad", 
+       title = "Distribución Bernoulli") +
   theme_minimal()
-  
-plot(x=x, y=prob, type='h', las=1, lwd=10, main="Distribución Bernoulli",xlab="Resultados posibles",ylab="Probabilidad")
+
+plot(x=x, y=prob, type='h', las=1, lwd=10, 
+     main="Distribución Bernoulli",
+     xlab="Resultados posibles",
+     ylab="Probabilidad")
 #type='h', lineas verticales
 #las=1: direccion del texto de los ejes
 #lwd=10: grosor de las lineas
@@ -69,20 +74,32 @@ dbinom(x,n,p)
 
 muestra = 0:n
 
-ggplot(data.frame(muestra, dbinom(muestra, n, p)), aes(muestra, dbinom(muestra, n, p), fill=ifelse(muestra==x,"P(x=20)","Resto"))) +
-  geom_bar(stat = "identity",width = 0.75) + xlab("Pacientes") + ylab("Densidad de probabilidad") +
+ggplot(data.frame(muestra, dbinom(muestra, n, p)), 
+       aes(muestra, 
+           dbinom(muestra, n, p), 
+           fill=ifelse(muestra==x,"P(x=20)","Resto"))) +
+  geom_bar(stat = "identity",width = 0.75) + 
+  xlab("Pacientes") + 
+  ylab("Densidad de probabilidad") +
   ggtitle("Distribución Binomial") +
-  scale_fill_manual(name = "", values=c("red","grey")) + theme_bw()
+  scale_fill_manual(name = "", values=c("red","grey")) + 
+  theme_bw()
 
 #b) Obtener la probabilidad de que al menos 15 pacientes sean fumadores
-#   Aquí se pide calcular P(X ≥15) = P(X > 14), que sería equivalente a P(X ≥ 15) = 1 − P(X < 15) = 1 − P(X ≤ 14)
+# Aquí se pide calcular P(X ≥15) = P(X > 14), 
+# que sería equivalente a P(X ≥ 15) = 1 − P(X < 15) = 1 − P(X ≤ 14)
 
 x=14
 pbinom(x,n,p,lower.tail=FALSE)
+pbinom(14, size = n, prob = p) #P(X ≤ 14) acumulada
 1-pbinom(x,n,p)
 
-ggplot(data.frame(muestra, dbinom(muestra, n, p)), aes(muestra, dbinom(muestra, n, p), fill=ifelse(muestra>x,"P(x>14)=P(x>=15)","Resto"))) +
-  geom_bar(stat = "identity",width=0.75) + xlab("Pacientes") + ylab("Densidad de probabilidad") +
+ggplot(data.frame(muestra, dbinom(muestra, n, p)), 
+       aes(muestra, dbinom(muestra, n, p), 
+           fill=ifelse(muestra>x,"P(x>14)=P(x>=15)","Resto"))) +
+  geom_bar(stat = "identity",width=0.75) + 
+  xlab("Pacientes") + 
+  ylab("Densidad de probabilidad") +
   ggtitle("Distribución Binomial") +
   scale_fill_manual(name = "", values=c("red","grey")) + theme_bw()
 
@@ -90,10 +107,14 @@ ggplot(data.frame(muestra, dbinom(muestra, n, p)), aes(muestra, dbinom(muestra, 
 # Se pide calcular P(10 ≤ X ≤ 15) = P(X ≤ 15) − P(X < 10) = P(X ≤ 15) − P(X ≤ 9)
 x1=15
 x2=9
-pbinom(x1,n,p)-pbinom(x2,n,p)
+round(pbinom(x1,n,p)-pbinom(x2,n,p),2) #P(X<=15) - P(X ≤ 9)
 
-ggplot(data.frame(muestra, dbinom(muestra, n, p)), aes(muestra, dbinom(muestra, n, p), fill=ifelse(muestra>=x2+1 & muestra<=x1,"P(10 ≤ X ≤ 15)","Resto")))+
-  geom_bar(stat = "identity",width=0.75) + xlab("Pacientes") + ylab("Densidad de probabilidad") +
+ggplot(data.frame(muestra, dbinom(muestra, n, p)), 
+       aes(muestra, dbinom(muestra, n, p), 
+           fill=ifelse(muestra>=x2+1 & muestra<=x1,"P(10 ≤ X ≤ 15)","Resto")))+
+  geom_bar(stat = "identity",width=0.75) + 
+  xlab("Pacientes") + 
+  ylab("Densidad de probabilidad") +
   ggtitle("Distribución Binomial") +
   scale_fill_manual(name = "", values=c("red","grey")) + theme_bw()
 
@@ -210,6 +231,18 @@ lambda <- 1.5  #Tasa de eventos por unidad de tiempo o espacio = 3*0.5 en 1/2 hr
 #al menos 2 infracciones es igual que 1 menos "no mas de 1" => 𝑃(𝑋≥2) = 1−𝑃(𝑋≤1)
 x <- 1 #números de eventos posibles 
 1-dpois(x, lambda)
+
+# Parámetro lambda para media hora
+lambda <- 1.5
+
+# Probabilidad de tener menos de 2 infracciones (0 o 1)
+prob_less_than_2 <- ppois(1, lambda)
+
+# Probabilidad de tener al menos 2 infracciones
+prob_at_least_2 <- 1 - prob_less_than_2
+
+# Imprimir el resultado
+prob_at_least_2
 
 ######## Ejercicio 3 ########
 # Un laboratorio que trabaja 24 × 7 recibe muestras de PCR para su análisis. Suponga que las últimas 1.000
