@@ -29,7 +29,6 @@ lines(x, dexp(x = x , rate = 1/8), type = "l", lwd = 2 , col = "blue")
 lines(x, dexp(x = x , rate = 1/20), type = "l", lwd = 2 , col = "green")
 # rate es el tiempo entre clientes
 # rate = 1/12  , ej llegan 12 clientes por minuto
-
 #modelo chi cuadrado
 # qchisq()
 # dchisq()
