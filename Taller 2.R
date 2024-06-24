@@ -238,6 +238,8 @@ hist(datos, freq = F , col ="steelblue" , border = "blue")
 curve(dnorm(x, mean = mean_est , sd = sd_est), add = T , lwd = 2 , col = "red")
 curve(dweibull(x, shape = shape_est , scale = scale_est), add = T , lwd = 2 , col = "yellow")
 curve(dlnorm(x, meanlog =  meanlog_est , sdlog = sdlog_est), add = T , lwd = 2 , col = "green")
+curve(dsn(x, xi = location, omega = scale, alpha = shape), add = TRUE, col = "purple", lwd = 2)
+
 
 install.packages("ggplot2")
 install.packages("dplyr")
@@ -291,4 +293,40 @@ print(Ajuste$bestfit)
 
 print(Ajuste$stat)
 
+install.packages("sn")
+library(sn)
 
+fit <- selm(datos ~ 1, family = "SN")
+# Obtener los parámetros ajustados
+params <- coef(fit)
+
+# Parámetros de la distribución Skewed-normal
+location <- params[1]  # Location (mu)
+scale <- params[2]     # Scale (sigma)
+shape <- params[3]     # Shape (alpha)
+
+# Imprimir los parámetros
+cat("Location (mu):", location, "\n")
+cat("Scale (sigma):", scale, "\n")
+cat("Shape (alpha):", shape, "\n")
+
+# Instalar y cargar ggplot2 si aún no lo has hecho
+install.packages("ggplot2")
+library(ggplot2)
+
+# Crear un data frame con los datos
+data <- data.frame(value = datos)
+
+# Crear la base del gráfico con ggplot2
+p <- ggplot(data, aes(x = value)) +
+  geom_histogram(aes(y = ..density..), binwidth = 1, fill = "steelblue", color = "blue", alpha = 0.6) +
+  labs(title = "Ajuste de la distribución Skewed-normal",
+       x = "Valor",
+       y = "Densidad") +
+  theme_minimal()
+
+# Añadir la curva Skewed-normal
+p <- p + stat_function(fun = dsn, args = list(xi = location, omega = scale, alpha = shape), color = "purple", size = 1)
+
+# Mostrar el gráfico
+print(p)
