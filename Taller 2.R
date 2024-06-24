@@ -131,12 +131,164 @@ pnorm(88.5, mut, sdt)
 # Ejercicio 5.b # Les he mentido :(, si la tienen que pensar (no es binomial, 
 # habla de la concentracion "media")
 
+#X_barra - N(1.48, 0.28 2)
+
+mu = 1.48; sd = 0.09333
+
+#P(X_barra > 2) = 1- P(X_barra <=2)
+p <- 1- pnorm(2, 1.48, sd)
+p
 # R: 1.263295e-08 ~~ 0
 
+#ejemplos teoricos y practicos sobre la normal
+
+#ejemplos teoricos
+#ejemplo de una N(0,1)
+curve(dnorm(x, mean = 0, sd = 1 ), from = -1 , to = 1, col = "red", lwd = 2)
+curve(dnorm(x, mean = 0, sd = 1 ), from = -10 , to = 10, col = "red", lwd =2)
+
+#para limpiar los graficos
+dev.off()
+
+#ejemplo de normales
+#Normal(0,1)
+#Normal(4,1)
+
+curve(dnorm(x, mean = 0, sd = 1 ), from = -3 , to = 7, 
+      col = "red", lwd =2) #curva de la N(0,1)
+
+curve(dnorm(x, mean = 4, sd = 1 ), add = T, 
+      col = "blue", lwd =2)
 
 
+dev.off()
+curve(dnorm(x, mean = 0, sd = 1 ), from = -3 , to = 10, 
+      col = "red", lwd =2) #curva de la N(0,1)
+curve(dnorm(x, mean = 4, sd = 2 ), add = T, 
+      col = "blue", lwd =2)
 
+#ejemplo practico
 
+set.seed(8888) #definir una semilla
+#definiendo 1000 valores aleatorios
+X1 <- rnorm(1000, 0,1)
+# X2 = X1 * 3 + 2
+#X2 - N( 3 * mu +2, 9*sigma cuadrado)
+#X2 - N( 2, 9) mu = 2 , var = 9 , se aumento la varianza
 
+#graficos
+X2 <- X1 * 3 + 2
+hist(X1, freq = F, col = "steelblue", border = "black", xlim = c(-12, 12))
+hist(X2, freq = F, col = "coral", border = "black" , add = T, nclass = 30)
+
+#ejemplo de suma/resta de normales
+X3 <- rnorm(1000 , 3, 4)
+X4 <- X1 - X3
+#X4 N( 0 - 3 , 1 + 16) = N (-3 , 17)
+dev.off()
+hist(X1, freq = F, col = "steelblue", border = "blue", xlim = c(-12, 12))
+hist(X2, freq = F, col = "coral", border = "red" , add = T, nclass = 30)
+hist(X4, freq = F, col = "gold", border = "yellow" , add = T, nclass = 30)
+
+install.packages("ggplot2")
+
+dev.off()
+library(ggplot2)
+# Supongamos que X1, X2 y X4 son tus datos
+# Crea un data frame combinando las tres variables con una columna indicando el origen
+data <- data.frame(
+  value = c(X1, X2, X4),
+  variable = factor(rep(c("X1", "X2", "X4"), c(length(X1), length(X2), length(X4))))
+)
+
+# Crea el histograma con ggplot2
+ggplot(data, aes(x = value, fill = variable)) +
+  geom_histogram(aes(y = ..density..), position = "identity", alpha = 0.5, bins = 30) +
+  scale_fill_manual(values = c("steelblue", "coral", "gold")) +
+  xlim(-12, 12) +
+  labs(title = "Histograma de X1, X2 y X4",
+       x = "Valor",
+       y = "Densidad") +
+  theme_minimal()
+
+#estimacion puntual
+datos <- rnorm(10000, 580 , 60)
+
+#estimacion
+library(MASS)
+
+normal <- fitdistr(datos, "normal")
+print(normal)
+mean_est <- normal$estimate[1]
+sd_est <- normal$estimate[2]
+
+weibull <- fitdistr(datos, "weibull")
+print(weibull)
+shape_est <- weibull$estimate[1]
+scale_est <- weibull$estimate[2]
+
+logNormal <- fitdistr(datos, "log-normal")
+print(logNormal)
+meanlog_est <- logNormal$estimate[1]
+sdlog_est <- logNormal$estimate[2]
+
+#graficos
+dev.off()
+hist(datos, freq = F , col ="steelblue" , border = "blue")
+curve(dnorm(x, mean = mean_est , sd = sd_est), add = T , lwd = 2 , col = "red")
+curve(dweibull(x, shape = shape_est , scale = scale_est), add = T , lwd = 2 , col = "yellow")
+curve(dlnorm(x, meanlog =  meanlog_est , sdlog = sdlog_est), add = T , lwd = 2 , col = "green")
+
+install.packages("ggplot2")
+install.packages("dplyr")
+library(ggplot2)
+library(dplyr)
+# Suponiendo que tus datos y estimaciones son los siguientes
+# datos: vector de datos
+# mean_est: media estimada para la normal
+# sd_est: desviación estándar estimada para la normal
+# shape_est: parámetro de forma estimado para la Weibull
+# scale_est: parámetro de escala estimado para la Weibull
+# meanlog_est: media logarítmica estimada para la log-normal
+# sdlog_est: desviación estándar logarítmica estimada para la log-normal
+
+# Crear un data frame con los datos
+data <- data.frame(value = datos)
+
+# Crear la base del gráfico con ggplot2
+p <- ggplot(data, aes(x = value)) +
+  geom_histogram(aes(y = ..density..), binwidth = 1, fill = "steelblue", color = "blue", alpha = 0.6) +
+  labs(title = "Distribuciones ajustadas a los datos",
+       x = "Valor",
+       y = "Densidad") +
+  theme_minimal()
+
+# Añadir la curva normal
+p <- p + stat_function(fun = dnorm, args = list(mean = mean_est, sd = sd_est), color = "red", size = 1)
+
+# Añadir la curva Weibull
+p <- p + stat_function(fun = dweibull, args = list(shape = shape_est, scale = scale_est), color = "yellow", size = 1)
+
+# Añadir la curva log-normal
+p <- p + stat_function(fun = dlnorm, args = list(meanlog = meanlog_est, sdlog = sdlog_est), color = "green", size = 1)
+
+# Mostrar el gráfico
+print(p)
+
+#test de bondad de ajuste
+#H0: DATOS - "Distribucion"
+ks.test(datos , "pnorm" , mean = mean_est , sd = sd_est)
+ks.test(datos , "pweibull" , shape = shape_est, scale = scale_est)
+ks.test(datos , "plnorm" , meanlog = meanlog_est, sdlog = sdlog_est)
+
+#propagate
+
+library(propagate)
+
+Ajuste <- fitDistr(datos)
+print(Ajuste)
+print(Ajuste$bestfit)
+
+print(Ajuste$stat)
 
 
