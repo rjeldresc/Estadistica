@@ -289,6 +289,15 @@ library(propagate)
 
 Ajuste <- fitDistr(datos)
 print(Ajuste)
+# Best fit is Normal Distribution.
+# Parameters:
+#   mean        sd 
+# 581.10965  59.55536 
+# Standard errors:
+#   mean        sd 
+# 0.5535552 0.4519774 
+# Goodness of fit:
+#   BIC = -1334.864
 print(Ajuste$bestfit)
 
 print(Ajuste$stat)
