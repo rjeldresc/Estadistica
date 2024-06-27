@@ -128,6 +128,8 @@ attach(base)
 # H1: MU <210
 t.test(Horas, mu=210, alternative="less", conf.level=0.95)
 # valor-p=0.01052 < alfa=0.05 -> rechazo H0
+# se concluye que o la evidencia indica que hay una baja en las horas trabajadas, es decir
+# el mu es inferior a las 210 horas trabajadas
 
 #b)¿la media de horas trabajadas en la fanea A es < 210 hrs?
 # H0: MUa >= 210  
@@ -136,37 +138,55 @@ FA <-base[Faena=="A", ]
 t.test(FA$Horas, mu=210, alternative="less", conf.level=0.95)
 #La horas trabajadas en la faena A es menor a 210 hrs.
 #p-value = 0.0273
+#p-value < 0.05  se rechaza H0
+
+FA <-base[Faena=="B", ]
+t.test(FA$Horas, mu=210, alternative="less", conf.level=0.95)
+#p-value = 0.2814
+#faena tiene alfa mayor a 0.05, p = 0.2814 , es decir se acepta H0
 
 #c) Los trabajadores con educación entre 8-12 años ¿Es más del 50%?
-# H0:P<=0.5   
+# H0:P<=0.5
 # H1:P >0.5
 addmargins(table(Educ))
 
-prop.test(x=79, n=139, p=0.5, alternative="greater", conf.level=0.95)
-# No hay evidencia que indique que el % no supere el 50%.
+#x = 79 corresponde al conteo de personas del filtro "Entre 8 y 12 años"
+#n = 139 es del total de la base
+prop.test(x = 79, n = 139, p = 0.5, alternative="greater", conf.level=0.95)
+#El p-value de 0.06341 es mayor que el nivel de significancia comúnmente usado (α=0.05α=0.05).
+
+#Dado que el p-value es mayor que 0.05, no hay suficiente evidencia estadística para rechazar la hipótesis nula. Por lo tanto, con un nivel de confianza del 95%, no podemos concluir que más del 50% de los trabajadores tienen educación entre 8-12 años.
+#En resumen, con base en los datos proporcionados y el resultado del test de proporciones, no podemos afirmar que la proporción de trabajadores con educación entre 8-12 años sea mayor al 50%. La evidencia no es suficientemente fuerte para rechazar la hipótesis nula a un nivel de significancia del 5%.
+#p-value = 0.06341 es mayor a 0.05  no puedo rechazar H0 , se acepta H0
+
 
 #d) ¿Hay diferencia según sexo en las horas extras medias trabajadas?
 #primero:
 # H0: Var(fem) = Var(masc)  
 # H1: Var(fem) distinto Var(masc)
-var.test(Hextras~Sexo, alternative = "two.sided",conf.level = 0.95) 
-# -> var. distintas
+var.test(Hextras~Sexo, alternative = "two.sided", conf.level = 0.95) 
+# -> var. distintas , p-value = 0.02719
 #segundo:
 # H0: Mu(fem) = Mu(masc)  
 # H1: Mu(fem) distinto Mu(masc)
-t.test(Hextras~Sexo, alternative = "two.sided",var.equal = FALSE,conf.level = 0.95)
+t.test(Hextras~Sexo, alternative = "two.sided", var.equal = FALSE, conf.level = 0.95)
+#var.equal = FALSE son distintas, se calcula en el paso anterior
+#p-value = 0.001201  es menor al alfa  , se rechaza H0, es decir las horas trabajadas
+# entre hombres y mujeres no son iguales
+
+
 
 #e) ¿Hay diferencia en bono promedio entre Hombres >50 y Mujeres > 50?
-H50<- base[Sexo=="Masc" & Edad >50, ] 
-M50<- base[Sexo=="Fem" & Edad >=50, ] 
+H50<- base[Sexo=="Masc" & Edad >50, ]
+M50<- base[Sexo=="Fem" & Edad >=50, ]
 
 var.test(H50$Bono,M50$Bono, alternative = "two.sided")
-
-# HO: μ (masc)= μ(fem)      
+#p-value = 0.6508
+# HO: μ (masc)= μ(fem)
 # H1: μ(masc) ≠ μ(fem)
 
-t.test(H50$Bono,M50$Bono, alternative = "two.sided",var.equal = TRUE,conf.level = 0.95)
-
+t.test(H50$Bono,M50$Bono, alternative = "two.sided", var.equal = TRUE, conf.level = 0.95)
+#p-value = 0.7137
 #no hay diferencia en el promedio de bono recibido entre estos dos grupos
 
 
