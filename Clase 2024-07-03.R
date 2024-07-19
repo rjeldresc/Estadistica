@@ -1,4 +1,4 @@
-##### Ejemplo con galton.xlsx
+######### Ejemplo con galton.xlsx
 setwd("d:/dev/Estadistica/Bases de datos/")
 # Cargar los paquetes necesarios
 library(readxl)
@@ -55,3 +55,75 @@ correlation <- cor(bd$T.Hijo , bd$T.Padre)
 
 # Mostrar el coeficiente de correlación
 print(correlation)
+
+# Ejemplo Con base Datos.xlsx
+setwd("d:/dev/Estadistica/Bases de datos/")
+library(readxl)
+datos <- read_excel("Datos.xlsx")
+head(datos)
+attach(datos)
+
+#se desea ajustar un modelo de regresion lineal simple para explicar la resistencia
+# de una soldadura
+
+# correlacion
+
+library(ggplot2)
+ggplot(datos, aes(x=Edad, y=Resistencia)) + 
+  geom_point() + theme_light()
+
+#matriz de dispersion
+library(GGally)
+pairs(datos, upper.panel = panel.smooth , lower.panel = panel.smooth )
+
+correlacion <- cor(datos) #por defecto es pearson (method = 'pearson'), otros posibles kensall y spearman
+print(correlacion)
+
+#matriz de correlacion
+library(corrplot)
+corrplot(correlacion , type = "lower")
+corrplot(correlacion , type = "lower", method = "square")
+corrplot(correlacion , type = "lower" , method = "number")
+
+# A medida que aumenta la edad de la soldadura, la resistencia que ella ofrece disminuye.
+# Este indicador nos muestra la asociación entre las variables pero no la causalidad.
+
+
+########### Modelo de regresión lineal simple (MRLS) ###########
+# El Análisis de Regresión se usa cuando se sabe que existe una relación lineal entre las variables.
+#1. Especificación del modelo
+#2. Estimación del modelo
+#3. Inferencia
+#4. Análisis de la varianza
+#5. Coeficiente de determinación
+#6. Análisis de supuestos: linealidad, homocedasticidad, independencia, norrmalidad
+
+
+#1.Especificación del modelo 
+# El modelo que se va a ajustar es: 
+# Resistencia = B0 + B1*Edad
+# Supuestos: - los residuos distribuyen normal
+#            - los residuos son independientes
+#            - los residuos tienen varianza constante (Homocedasticidad)
+
+#2. Estimación del modelo
+# Para obtener las estimaciones de los parámetros del modelo anterior se usa el comando lm
+mod <- lm(Resistencia ~ Edad, data=datos) #hay que poner el Y y el X
+# Resistencia ~ Edad indica que Resistencia es la variable respuesta y que Edad es la variable explicativa
+summary(mod)
+
+#resistencia = 2596.856  - 33.556 * Edad
+
+# - Por cada semana que envejezca la soldadura, se espera que la resistencia promedio disminuya en 33.556 psi.
+# - Si la soldadura es nueva (Edad=0), se espera que la resistencia promedio sea de 2596.856 psi.
+
+# Podemos obtener, si quisieramos , los IC para los parametros
+confint(mod)
+
+# Incluyamos la recta de regresión que representa el modelo ajustado anterior
+ggplot(datos, aes(x=Edad, y=Resistencia)) + 
+  geom_point() +
+  geom_smooth(method='lm', formula=y~x, se=TRUE, col='lightblue') 
+# opción se=FALSE o TRUE, muestra el intervalo de confianza de la regresión.
+
+
