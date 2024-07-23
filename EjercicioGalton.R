@@ -48,8 +48,8 @@ bd <- readxl::read_excel("Regresion1.xlsx", sheet = "Ptje")
 cor(bd$NEM, bd$PTJE) #0.8208836
 cor(bd$HRS, bd$PTJE) #0.9367613
 
-cor.test(bd$PTJE, bd$NEM)
-cor.test(bd$NEM, bd$PTJE)
+cor.test(bd$PTJE, bd$NEM) # t = 3.5209
+cor.test(bd$PTJE, bd$HRS) #t = 6.5565
 
 # modelos simples
 lm(bd$PTJE ~ bd$HRS , data = bd )
@@ -90,3 +90,7 @@ summary(influence.measures(m3))
 # 5  0.22  -0.34    -0.39  2.86_*  0.09   0.52
 # 6 -0.33   0.29    -0.34  2.51_*  0.07   0.46
 
+bd$NemLog <- log(bd$NEM)
+
+
+car::influenceIndexPlot(m3)
