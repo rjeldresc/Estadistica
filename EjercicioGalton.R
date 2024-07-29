@@ -1,7 +1,20 @@
 # ejercicio clase 2024-07-03
 
-setwd("d:/dev/Estadistica/Bases de datos/")
-bd <- readxl::read_excel("Galton1.xlsx")
+library(DBI)
+library(odbc)
+
+# Establece la conexión a la base de datos
+con <- dbConnect(odbc::odbc(),
+                 Driver = "ODBC Driver 17 for Sql Server", 
+                 Server = "localhost",
+                 Database = "DataEstadistica",
+                 UID = "rodrigo",
+                 PWD = "enter",
+                 Port = 1433)
+bd <- dbGetQuery(con, "SELECT * FROM [dbo].[Galton]")
+
+#setwd("d:/dev/Estadistica/Bases de datos/")
+#bd <- readxl::read_excel("Galton1.xlsx")
 plot(bd)
 m1 <- lm(bd$T.Hijo ~ bd$T.Padre , data = bd ) #variable hijo "Y" explicada por X
 abline(lm(bd$T.Hijo ~ bd$T.Padre , data = bd), col = "red")
@@ -12,9 +25,9 @@ anova(m1) # desglose de las sumas cuadradas
 # Coefficients:
 #   (Intercept)   bd$T.Padre  
 # 84.9550       0.4961 
-
+dbDisconnect(con)
 # Y = 84.9550 + 0.4961 X
-
+plot(m1,2)
 #Yi = Beta0 + Beta1*Xi + epsilon
 
 cor(bd$T.Padre, bd$T.Hijo, method ="pearson") #R  coeficiente de correlacion
@@ -43,8 +56,23 @@ lmtest::bptest(m1)
 #BP = 0.034032, df = 1, p-value = 0.8536 > alfa = 0,05
 lmtest::dwtest(m1, alt = "t")
 
-setwd("d:/dev/Estadistica/Bases de datos/")
-bd <- readxl::read_excel("Regresion1.xlsx", sheet = "Ptje")
+# Establece la conexión a la base de datos
+con <- dbConnect(odbc::odbc(),
+                 Driver = "ODBC Driver 17 for Sql Server", 
+                 Server = "localhost",
+                 Database = "DataEstadistica",
+                 UID = "rodrigo",
+                 PWD = "enter",
+                 Port = 1433)
+bd <- dbGetQuery(con, "SELECT * FROM [dbo].[Ptje]")
+dbDisconnect(con)
+plot(bd$HRS, bd$PTJE)
+m2 <- lm(bd$PTJE ~ bd$HRS , data = bd )
+abline(m2, col= "orange")
+#setwd("d:/dev/Estadistica/Bases de datos/")
+#bd <- readxl::read_excel("Regresion1.xlsx", sheet = "Ptje")
+
+
 cor(bd$NEM, bd$PTJE) #0.8208836
 cor(bd$HRS, bd$PTJE) #0.9367613
 
@@ -55,17 +83,17 @@ cor.test(bd$PTJE, bd$HRS) #t = 6.5565
 lm(bd$PTJE ~ bd$HRS , data = bd )
 lm(bd$PTJE ~ bd$NEM , data = bd )
 
-m2 <- lm(bd$PTJE ~ bd$NEM , data = bd )
-summary(m2)
+m3 <- lm(bd$PTJE ~ bd$NEM , data = bd )
+summary(m3)
 #bd$NEM        0.1655     0.0470   3.521   0.0125 *
 
-m3 <- lm(bd$PTJE ~ bd$HRS , data = bd )
-summary(m3)
+m2 <- lm(bd$PTJE ~ bd$HRS, data = bd )
+summary(m2)
 #bd$HRS        3.7427     0.5708   6.557 0.000603 ***
 #para el caso de la variable Hrs tiene mayor R2 , Multiple R-squared:  0.8775
 
 plot(bd$HRS, bd$PTJE)
-abline(m3, col = "red")
+abline(m3, col = "orange")
 
 # Test de valores outlier de Bonferroni
 car::outlierTest(m3)
@@ -81,7 +109,7 @@ lm(bd_sin_4$PTJE ~ bd_sin_4$HRS , data = bd_sin_4 )
 
 #dato influyente
 
-summary(influence.measures(m3))
+summary(influence.measures(m2))
 # Potentially influential observations of
 # lm(formula = bd$PTJE ~ bd$HRS, data = bd) :
 #   

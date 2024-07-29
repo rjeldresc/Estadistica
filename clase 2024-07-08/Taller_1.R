@@ -1,11 +1,22 @@
-setwd("d:/dev/Estadistica/clase 2024-07-08/")
-
-datos<- readxl::read_excel("Datos.xlsx")
+#setwd("d:/dev/Estadistica/clase 2024-07-08/")
+#datos<- readxl::read_excel("Datos.xlsx")
+library(DBI)
+library(odbc)
+# Establece la conexión a la base de datos
+con <- dbConnect(odbc::odbc(),
+                 Driver = "ODBC Driver 17 for Sql Server", 
+                 Server = "localhost",
+                 Database = "DataEstadistica",
+                 UID = "rodrigo",
+                 PWD = "enter",
+                 Port = 1433)
+datos <- dbGetQuery(con, "SELECT * FROM [dbo].[Soldadura]")
+dbDisconnect(con)
 head(datos)
 attach(datos)
 
-# Se desea ajustar un modelo de regresión lineal simple para explicar la Resistencia de una 
-# soldadura en función de la Edad de la soldadura.
+# Se desea ajustar un modelo de regresión lineal simple para explicar 
+# la Resistencia de una soldadura en función de la Edad de la soldadura.
 
 
            ########### CORRELACIÓN ###########
@@ -42,7 +53,7 @@ corrplot(correlacion, type="lower", method = "number")
 #3. Inferencia
 #4. Análisis de la varianza
 #5. Coeficiente de determinación
-#6. Análisis de supuestos: linealidad, homocedasticidad, independencia, normalidad
+#6. Análisis de supuestos de residuos: linealidad, homocedasticidad, independencia, normalidad
 
 
 #1.Especificación del modelo 
@@ -64,12 +75,14 @@ summary(mod)
 # - Si la soldadura es nueva (Edad=0), se espera que la resistencia promedio sea de 2596.856 psi.
 
 # Podemos obtener, si quisieramos , los IC para los parametros
-confint(mod)
+confint(mod) #caso poblacional
+# si la soldadura es nueva T=0 , para la poblacion en promedio
+# la resistencia está entre 2477.28347 y 2716.42864 con 95% de confianza
 
 # Incluyamos la recta de regresión que representa el modelo ajustado anterior
 ggplot(datos, aes(x=Edad, y=Resistencia)) + 
   geom_point() +
-  geom_smooth(method='lm', formula=y~x, se=TRUE, col='red') 
+  geom_smooth(method='lm', formula=y~x, se=TRUE, col='darkblue')
 # opción se=FALSE o TRUE, muestra el intervalo de confianza de la regresión.
 
 
@@ -88,9 +101,13 @@ summary(mod)
 # H0: No existe regresión 
 # H1: existe regresión
 anova <- aov(mod)
-summary(mod)
-summary(anova)
+summary(mod) #está todo solo para 1 variable
+#Residual standard error: 126.4 es la raiz del valor de lo que sale en la anova
+
+summary(anova) #Entrega el test F
 # valor p=1.58e-08 < alpha = 5%, se rechaza H0, existe regresión.
+# 15970 es la varianza estimada para todas las normales
+
 par(mfrow = c(2, 2))
 plot(anova)
 par(mfrow = c(1, 1))
@@ -128,7 +145,7 @@ plot(mod, 2)
 # H0: residuos son Normales
 # H1: residuos no son Normales
 ks.test(mod$residuals, "pnorm", mean(mod$residuals), sd(mod$residuals))
-nortest::lillie.test(mod$residuals)
+nortest::lillie.test(mod$residuals) #recomendado para n > 50
 # p-value = 0.09597 > alpha = 5%, no se rechaza H0. Los residuos son normales
 shapiro.test(mod$residuals)
 
@@ -136,13 +153,13 @@ shapiro.test(mod$residuals)
 # H0: Homocedasticidad
 # H1: Heterocedasticidad
 lmtest::bptest(mod)
-# p-value = 0.1723
+# BP = 1.8626, df = 1, p-value = 0.1723
 
 # Independencia (en casos temporales)
 # H0: No hay autocorrelacion
 # H1: hay autocorrelacion
 lmtest::dwtest(mod)
-# p-value = 0.3061. Si hay independencia
+# DW = 1.7685, p-value = 0.3061 Si hay independencia
 
 
 ########### Anomalías ########
@@ -159,7 +176,7 @@ mod2 <- lm(Resistencia ~ Edad, datos2)
 summary(mod2)
 # modelo 1: Resistencia = 2596.856 - 33.556 * Edad # con los 21 registros
 # R-squared:  0.821
-# modelo 2: Resistencia = 2627.822 - 37.154 * Edad # sin el registro 21
+# modelo 2: Resistencia = 2627.822 - 37.154 * Edad # sin el registro "21"
 # R-squared:  0.9018 tiene mejor porcentaje aunque se debe invertigar si eliminar o no el registro
 
 g_mod1<- ggplot(datos, aes(x=Edad, y=Resistencia)) + 
@@ -169,8 +186,8 @@ g_mod1<- ggplot(datos, aes(x=Edad, y=Resistencia)) +
 
 g_mod2<- ggplot(datos2, aes(x=Edad, y=Resistencia)) + 
   geom_point() +
-  geom_smooth(method='lm', formula=y~x, se=TRUE, col='darkblue') +
-  labs(title = "Modelo 2")
+  geom_smooth(method='lm', formula=y~x, se=TRUE, col='darkred') +
+  labs(title = "Modelo 2 sin un dato")
 
 library(gridExtra)
 grid.arrange(g_mod1,g_mod2, ncol = 2)
