@@ -22,7 +22,7 @@ attach(base)
 
 # Pregunta 1 ####
 # Obtenga el mejor modelo de regresión lineal simple basado en las variables meteorológicas.
-
+#Graficos
 par(mfrow = c(2,3))
 plot(PM2.5 ~ Viento  , data = base, type = "p", pch = 20, bty = "n", las = 1)
 plot(PM2.5 ~ TProm   , data = base, type = "p", pch = 20, bty = "n", las = 1)
@@ -41,6 +41,23 @@ Modelo4 <- lm(PM2.5 ~ TMax, data = base)
 summary(Modelo4)$r.squared
 Modelo5 <- lm(PM2.5 ~ Humed, data = base)
 summary(Modelo5)$r.squared
+
+# Correlación entre PM2.5 y Viento
+cor.test(base$PM2.5, base$Viento)
+
+# Correlación entre PM2.5 y TProm
+cor.test(base$PM2.5, base$TProm)
+
+# Correlación entre PM2.5 y TMin
+cor.test(base$PM2.5, base$TMin)
+
+# Correlación entre PM2.5 y TMax
+cor.test(base$PM2.5, base$TMax)
+
+# Correlación entre PM2.5 y Humed
+cor.test(base$PM2.5, base$Humed)
+
+
 
 # Supuestos
 
@@ -83,6 +100,7 @@ plot(PM2.5 ~ CO, data = base, type = "p", pch = 20, bty = "n", las = 1)
 plot(PM2.5 ~ O3, data = base, type = "p", pch = 20, bty = "n", las = 1)
 dev.off()
 
+#contaminantes atmosféricos
 Modelo1 <- lm(PM2.5 ~ NO, data = base)
 summary(Modelo1)$r.squared
 Modelo2 <- lm(PM2.5 ~ NO2, data = base)
@@ -91,6 +109,24 @@ Modelo3 <- lm(PM2.5 ~ CO, data = base)
 summary(Modelo3)$r.squared
 Modelo4 <- lm(PM2.5 ~ O3, data = base)
 summary(Modelo4)$r.squared
+
+# Correlación entre PM2.5 y NO
+cor.test(base$PM2.5, base$NO)
+# t = , p-value = 
+
+# Correlación entre PM2.5 y NO2
+cor.test(base$PM2.5, base$NO2)
+# t = , p-value = 
+
+# Correlación entre PM2.5 y CO
+cor.test(base$PM2.5, base$CO)
+# t = , p-value = 
+
+# Correlación entre PM2.5 y O3
+cor.test(base$PM2.5, base$O3)
+# t = , p-value = 
+
+
 
 
 # Supuestos
@@ -134,6 +170,8 @@ summary(M2) #Adjusted R-squared:  0.8196
 summary(completo) #Adjusted R-squared:  0.8179 
 print(0.8196 - 0.8179) * 100
 
+anova(completo, M2)
+
 
 # Paso 1: Definir la lista de modelos (fórmulas) generados durante el step
 modelos <- list(
@@ -152,6 +190,7 @@ R2_ajustados <- sapply(modelos, function(mod) summary(mod)$adj.r.squared)
 # Paso 3: Mostrar los R² ajustados
 print(R2_ajustados)
 
+anova(completo,M2)
 
 #PREGUNTA 4:
 
