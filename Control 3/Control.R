@@ -42,6 +42,14 @@ summary(Modelo4)$r.squared
 Modelo5 <- lm(PM2.5 ~ Humed, data = base)
 summary(Modelo5)$r.squared
 
+#usando transformacion log
+Modelo1 <- lm(PM2.5 ~ log(Viento)   , data = base); summary(Modelo1)$r.squared
+Modelo2 <- lm(PM2.5 ~ log(TProm)    , data = base); summary(Modelo2)$r.squared
+Modelo3 <- lm(PM2.5 ~ log(TMin)     , data = base); summary(Modelo3)$r.squared
+Modelo4 <- lm(PM2.5 ~ log(TMax)     , data = base); summary(Modelo4)$r.squared
+Modelo5 <- lm(PM2.5 ~ log(Humed)    , data = base); summary(Modelo5)$r.squared
+#mejor modelo 0.4466271 log(TMin)
+
 # Correlación entre PM2.5 y Viento
 cor.test(base$PM2.5, base$Viento)
 
