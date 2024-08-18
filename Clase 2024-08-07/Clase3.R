@@ -3,8 +3,8 @@
 
 library(faraway)
 library(nnet)
-library(VGAM)
-library(MASS)
+library(VGAM) #permite ajustar modelos no proporcionales
+library(MASS) #permite ajustar modelos acumulativos proporcionales
 
 ####################################################
 ## Lectura de la data y verificación de formato
@@ -23,9 +23,10 @@ levels(party) <- c("Democrat","Democrat","Independent","Independent",
                    "Independent","Republican","Republican")
 data.frame(nes96$PID, party)
 
+#puntos medios de income
 inca <- c(1.5,4,6,8,9.5,10.5,11.5,12.5,13.5,14.5,16,18.5,21,23.5,
           27.5,32.5,37.5,42.5,47.5,55,67.5,82.5,97.5,115)
-income <- inca[unclass(nes96$income)]
+income <- inca[unclass(nes96$income)] #le quita las categorias con un class
 data.frame(nes96$income, income)
 
 rnes96 <- data.frame(party, income, education=nes96$educ, age=nes96$age)
@@ -40,16 +41,16 @@ faraway::vif(rnes96[c("income","age")])
 ## Se ajusta un modelo multinomial nominal
 
 ?multinom
-multi0 <- multinom(party ~ 1, data=rnes96)
-multi1 <- multinom(party ~ age + education + income, data=rnes96)
+multi0 <- multinom(party ~ 1, data=rnes96) #ajuste de una constante
+multi1 <- multinom(party ~ age + education + income, data=rnes96) #con 3 covariables
 multi0
 multi1
-summary(multi0)
-summary(multi1)
-anova(multi0, multi1)
+summary(multi0) #AIC: 2045.272 
+summary(multi1) #AIC: 2004.333
+anova(multi0, multi1) #comparacion de deviancas p-value = 3.032523e-09; se rechaza h0
 AIC(multi0, multi1)
 BIC(multi0, multi1)
-qchisq(0.95,16)
+qchisq(0.95,16)  #26.29623  es menor que  72.93956
 
 
 ## Calidad del ajuste por separado
@@ -62,18 +63,18 @@ deviance(multi0); qchisq(0.95, n-multi0$edf)  # Nivel de ajuste modelo 0
 
 # Calculo manual de la diferencia de deviance (equivalente al anova)
 deviance(multi0)-deviance(multi1); qchisq(0.95, multi1$edf-multi0$edf)
-1-pchisq(deviance(multi0)-deviance(multi1), multi1$edf-multi0$edf)
+1-pchisq(deviance(multi0)-deviance(multi1), multi1$edf-multi0$edf) #3.032523e-09 sale lo mismo que en el anova
 
 ## Mejorar el modelo quitando una variable
 multi1.1 <- multinom(party ~ education + income, data=rnes96)
 multi1.2 <- multinom(party ~ age + income, data=rnes96)
 multi1.3 <- multinom(party ~ age + education, data=rnes96)
 
-anova(multi1.1, multi1)
+anova(multi1.1, multi1) #p-value = 0.1927301 , no se rechaza h0, el modelo  multi1.1 explica casi lo mismo que el modelo multi1
 anova(multi1.2, multi1)
-anova(multi1.3, multi1)
+anova(multi1.3, multi1) # p-value = 1.267249e-10 income es significativo
 
-AIC(multi1.1 , multi1.2, multi1.3 )
+AIC(multi1.1 , multi1.2, multi1.3 ) #el mejor multi1.2  6 1996.539 según AIC
 BIC(multi1.1 , multi1.2, multi1.3 )
 
 # nos quedamos con el modelo 1.1
@@ -85,6 +86,12 @@ anova(multi2.1, multi2)
 anova(multi2.2, multi2)
 
 AIC(multi2.1 , multi2.2, multi2, multi1)
+# df      AIC
+# multi2.1  4 1993.424
+# multi2.2 14 2044.797
+# multi2   16 2003.625
+# multi1   18 2004.333
+
 BIC(multi2.1 , multi2.2, multi2, multi1)
 
 anova(multi2.1, multi2, multi1)
@@ -93,20 +100,20 @@ anova(multi2.1, multi1)
 # nos quedamos con el modelo 2.1
 multi3 <- multinom(party ~ income, data=rnes96)
 deviance(multi3); qchisq(0.95, n-multi3$edf)  # Nivel de ajuste modelo 3
-1-pchisq(deviance(multi3), n-multi3$edf) 
+1-pchisq(deviance(multi3), n-multi3$edf) #LA PROBABILIDAD DE QUE LA DEVIANCE SEA EL VALOR DE LA CHI CUADRADO
 
 plot(rnes96$income~rnes96$party)
 hist(rnes96$income)
 quantile(rnes96$income)
 
 # Busqueda por AIC y BIC
-multi4 <- step(multi1)
+multi4 <- step(multi1) #formula = party ~ income
 multi4
 multi3
 
 ## ODD-RATIO
-exp(coef(multi3)[,2]*1)  
-exp(coef(multi3)[,2]*10)
+exp(coef(multi3)[,2]*1) #diferencia salarial por 1 , intercepto no se explica
+exp(coef(multi3)[,2]*10) #diferencia salarial por 10
 exp(coef(multi3)[,2]*100)
 
 
@@ -168,7 +175,7 @@ summary(vglm2)
 # la diferencia esta en al parametrizacion: C+xb, C-xb 
 
 ############################################
-# Comparaci?n entre los diferentes modelos
+# Comparacion entre los diferentes modelos
 
 multi1
 summary(multi1)
