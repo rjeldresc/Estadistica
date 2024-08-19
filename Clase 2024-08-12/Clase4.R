@@ -8,7 +8,7 @@
  ?spam7 
  summary(spam7)
  dim(spam7)
- faraway::vif(spam7[,-7])
+ faraway::vif(spam7[,-7]) #factor de varianzas, todos bajo 2 , pequeño no hay colinealidad
   
  names(spam7)
 
@@ -43,13 +43,22 @@
    geom_boxplot(fill=c("lightsalmon","skyblue"), alpha=0.7, width=0.1)+
    ylim(0,0.1) # se trunca a 0.1
  
- 
+ ?glm
 ## Regresión Logística
  RegLog_logit1 <- glm(yesno~., data=spam7, family = binomial(link="logit"))
  summary(RegLog_logit1)
+ 
+ RegLog_logit1 <- glm(yesno~., data=spam7, family = binomial(link="probit"))
+ summary(RegLog_logit1)
+ 
+ RegLog_cloglogit1 <- glm(yesno~., data=spam7, family = binomial(link="cloglog"))
+ summary(RegLog_logit1)
+ 
+ #modelo sin palabra 'make'
  RegLog_logit2 <- glm(yesno~., data=spam7[,which(names(spam7)!="make")], 
                       family = binomial(link="logit"))
  summary(RegLog_logit2)
+ 
  RegLog_logit3 <- glm(yesno~crl.tot+dollar+bang+money, data=spam7, 
                       family = binomial(link="logit"))
  summary(RegLog_logit3)
@@ -60,7 +69,9 @@
  
  # busqueda por BIC
  RegLog_logit4 <- step(RegLog_logit1, k=log(nrow(spam7))) # se recupera modelo 2
-
+ RegLog_cloglogit4 <- step(RegLog_cloglogit1, k=log(nrow(spam7)))
+ BIC(RegLog_logit4) #4109.432 en la salida anterior aparece como 'AIC'
+ 
 ## Regresión Logística: Probit
  RegLog_probit1 <- glm(yesno~., data=spam7, family = binomial(link="probit"))
  summary(RegLog_probit1)
