@@ -1,6 +1,6 @@
 ################################################################
 ## Modelos no lineales 
-
+#7684390 ambientes pre prod@bancoestado.cl
 # Modelo de Michaelis-Menten
 
 MM <- function(b, x){ # b: vector de parámetros
