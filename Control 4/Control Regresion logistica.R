@@ -26,74 +26,79 @@ table(prostate.train$svi)/nrow(prostate.train)*100 # entrenamiento
 table(prostate.test$svi)/nrow(prostate.test)*100 # test
 
 
-#1. Realice un analisis de inflacion de varianzas (VIF) y de ser necesario elimine todas aquellas necesarias de
-#   modo de garantizar un vif menor a 8.
-
-names(prostate) 
-
-faraway::vif(prostate[,-5]) #se le quita la variable respuesta 
+#1. Realice un analisis de inflacion de varianzas (VIF) y de ser necesario 
+#   elimine todas aquellas necesarias de modo de garantizar un vif menor a 8.
+names(prostate)
+faraway::vif(prostate.train[,-5]) #se le quita la variable respuesta 
+#factor de varianzas
+#Resp: Son todos menores a 8
 # lcavol  lweight      age     lbph      lcp  gleason    pgg45     lpsa 
-# 3.081874 1.473906 1.357345 1.369858 2.557869 2.437837 2.988007 2.605324 
+# 2.906170 1.451973 1.317708 1.361815 2.481346 2.272620 2.787296 2.503384 
 
-# Ajustar un modelo de regresión logística con 'svi' como variable respuesta
-initial_model <- glm(svi ~ ., data = prostate, family = binomial(link="logit"))
-# Ajustar el modelo de regresión lineal con todas las variables predictoras
-linear_model <- glm(svi ~ lcavol + lweight + age + lbph + lcp + gleason + pgg45 + lpsa, data = prostate.train, family = binomial(link="logit"))
+#2  Utilizando la data ‘prostate.train’ realice una grafica apropiada entre la variable respuesta y 
+# cada una de las covariables. Segun esta perpespectiva grafica, 
+# ¿Existe alguna de ellas que pueda explicar la variable respuesta?
 
-
-# Calcular los VIFs
-vif_values <- vif(initial_model)
-print(vif_values)
-print(vif(initial_model))
-# Cargar el paquete car
-library(car)
-
-# Calcular los VIF
-vif_values <- vif(linear_model)
-print(vif_values)
-
-
-#2
+library(ggplot2)
 
 #analisis descriptivo para la lcavol
 ggplot(prostate.train, aes(x=svi, y=lcavol, fill=svi))+
   geom_violin(alpha=0.5)+
   geom_boxplot(fill=c("lightsalmon","skyblue"), alpha=0.7, width=0.1)
+#graficamente la caja con '1' está más arriba que la caja con '0'
+#parece ser que lcavol influye en la variable respuesta
+
 
 #analisis descriptivo para la lweight
 ggplot(prostate.train, aes(x=svi, y=lweight, fill=svi))+
   geom_violin(alpha=0.5)+
   geom_boxplot(fill=c("lightsalmon","skyblue"), alpha=0.7, width=0.1)
+#graficamente , las graficas de las cajas están casi al mismo nivel
+#parece ser que la variable lweight no influye en la variable respuesta
 
 #analisis descriptivo para la age
 ggplot(prostate.train, aes(x=svi, y=age, fill=svi))+
   geom_violin(alpha=0.5)+
   geom_boxplot(fill=c("lightsalmon","skyblue"), alpha=0.7, width=0.1)
+#graficamente , las graficas de las cajas están casi al mismo nivel
+#parece ser que la variable age no influye en la variable respuesta
 
 #analisis descriptivo para lbph
 ggplot(prostate.train, aes(x=svi, y=lbph, fill=svi))+
   geom_violin(alpha=0.5)+
   geom_boxplot(fill=c("lightsalmon","skyblue"), alpha=0.7, width=0.1)
+#graficamente la caja con '1' está un poco más abajo que la caja con '0'
+#parece ser que lbph influye en la variable respuesta
 
-#analisis descriptivo para lcp * 
+#analisis descriptivo para lcp
 ggplot(prostate.train, aes(x=svi, y=lcp, fill=svi))+
   geom_violin(alpha=0.5)+
   geom_boxplot(fill=c("lightsalmon","skyblue"), alpha=0.7, width=0.1)
+#graficamente la caja con '1' está más arriba que la caja con '0'
+#parece ser que lcp influye en la variable respuesta
 
 #analisis descriptivo para gleason
 ggplot(prostate.train, aes(x=svi, y=gleason, fill=svi))+
   geom_violin(alpha=0.5)+
   geom_boxplot(fill=c("lightsalmon","skyblue"), alpha=0.7, width=0.1)
+#graficamente la caja con '1' está más arriba que la caja con '0'
+#parece ser que gleason influye en la variable respuesta
 
-#analisis descriptivo para pgg45 *
+#analisis descriptivo para pgg45
 ggplot(prostate.train, aes(x=svi, y=pgg45, fill=svi))+
   geom_violin(alpha=0.5)+
   geom_boxplot(fill=c("lightsalmon","skyblue"), alpha=0.7, width=0.1)
+#graficamente la caja con '1' está más arriba que la caja con '0'
+#parece ser que pgg45 influye en la variable respuesta
 
-#analisis descriptivo para lpsa *
+#analisis descriptivo para lpsa
 ggplot(prostate.train, aes(x=svi, y=lpsa, fill=svi))+
   geom_violin(alpha=0.5)+
   geom_boxplot(fill=c("lightsalmon","skyblue"), alpha=0.7, width=0.1)
+#graficamente la caja con '1' está más arriba que la caja con '0'
+#parece ser que pgg45 influye en la variable respuesta
+
+
 
 #3
 
