@@ -1,0 +1,96 @@
+---
+title: "Taller Evaluado de Regresión Logística"
+author: "Nombres Integrantes"
+date: "Fecha de entrega: 2024-08-21 a las 18:00 horas"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, include=TRUE) 
+```
+
+#### Objetivo: Ajustar un modelo de regresión logística en **R** e interpretar sus resultados.
+
+
+#### Instrucciones:
+
+Para este taller pueden trabajar en parejas y se utilizará el conjunto de datos `prostate` de la libreria `faraway`. 
+
+Este conjunto de datos contiene información sobre 97 pacientes con cáncer de próstata. Considere la variable respuesta como `svi` (seminal vesicle invasion). Esta variable indica si el cáncer se ha extendido a la vesícula seminal (1) o no (0). Las demás variables serán consideradas como variables explicativas. El objetivo es ajustar un modelo de regresión logística para predecir la invasión de la vesícula seminal. 
+
+Realizar una descomposición aleatoria de la base de datos con la proporción 90\%-10\% para train y test, respectivamente. Utilice las siguientes lineas de código para cargar la base de datos, junto con la descomposición aleatoria
+ 
+```{r}
+library(faraway)
+prostate$svi <- factor(prostate$svi)
+head(prostate)
+
+# se separa el conjunto de datos
+set.seed(1)
+id=sample.int(nrow(prostate), ceiling(nrow(prostate)*0.9))
+
+prostate.train <- prostate[id,]
+prostate.test <- prostate[-id,]
+```
+
+
+
+##### Pregunta 1: Realice un análisis de inflación de varianzas (VIF) y de ser necesario elimine todas aquellas necesarias de modo de garantizar un vif menor a 8.
+
+```{r}
+#### Desarrollo Pregunta 1
+```
+Solo 2 variables tienen vif mayor a 8 por lo que se eliminará una de ellas.
+
+
+##### Pregunta 2: Utilizando la data `prostate.train' realice una gráfica apropiada entre la variable respuesta y cada una de las covariables. Según esta perpespectiva gráfica, ¿Existe alguna de ellas que pueda explicar la variable respuesta?
+```{r}
+#### Desarrollo Pregunta 2
+```
+
+
+##### Pregunta 3: Utilizar el criterios de Akaike (AIC), la metodología stepwise (puede ser backward, forward o both, indique explícitamente cuál utilizará) y la función de enlace `logit` para determinar el modelo de regresión logística que mejor ajusta a la variable respuesta.
+
+```{r}
+#### Desarrollo Pregunta 3
+```
+
+
+##### Pregunta 4:  Analice la significancia del modelo obtenido luego del proceso de selección, y responda si:
+a. ¿Es el modelo obtenido significativo?
+b. ¿Existe alguna covariable no significativa?
+c. ¿En caso de existir alguna covariable no significativa, la quitaría del modelo?. Fundamente.
+d. Utilice los odd-ratios para interprete las variables del modelo final.
+
+```{r}
+#### Desarrollo Pregunta 4
+```
+
+
+##### Pregunta 5: Repita el proceso de las preguntas 3 y 4 con la función de enlace `probit`.
+
+```{r}
+#### Desarrollo Pregunta 5
+```
+
+
+##### Pregunta 6: Utilice algún criterio apropiado para definir cuál de los dos modelos finales (logit o probit) es el mejor.
+
+```{r}
+#### Desarrollo Pregunta 6
+```
+
+
+##### Pregunta 7: Realice la predicción para los datos de la muestra `prostate.test' con ambos modelos. Incluya un intervalo de confianza para las predicciones.
+
+```{r}
+#### Desarrollo Pregunta 7
+```
+
+
+##### Pregunta 8: Utilice el punto de corte $0.5$ para realizar la clasificación. Reporte las dos matrices de confusión (una de cada modelo). Utilice la exactitud (accuracy) para indicar cuál modelo es mejor. ¿El modelo mejor es el mismo indicado en la pregunta 6?
+```{r}
+#### Desarrollo Pregunta 8
+```
