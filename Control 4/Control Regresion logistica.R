@@ -32,6 +32,7 @@ faraway::vif(prostate.train[,-5]) #se le quita la variable respuesta para el ana
 # 2  Utilizando la data ‘prostate.train’ realice una grafica apropiada entre la variable respuesta y 
 # cada una de las covariables. Segun esta perpespectiva grafica, 
 # ¿Existe alguna de ellas que pueda explicar la variable respuesta?
+# se adjunta detalle en pdf
 
 library(ggplot2)
 
@@ -408,10 +409,10 @@ probit_intervals
 # Utilice la exactitud (accuracy) para indicar cual modelo es mejor. 
 # ¿El modelo mejor es el mismo indicado en la pregunta 6?
 
-# Clasificación para el modelo logit
+# Clasificacion para el modelo logit
 logit_classifications <- ifelse(logit_predictions$fit >= 0.5, 1, 0)
 
-# Clasificación para el modelo probit
+# Clasificacion para el modelo probit
 probit_classifications <- ifelse(probit_test_pred$fit >= 0.5, 1, 0)
 
 library(caret)
@@ -420,18 +421,17 @@ library(caret)
 logit_classifications_factor <- factor(logit_classifications, levels = c(1, 0))
 probit_classifications_factor <- factor(probit_classifications, levels = c(1, 0))
 
-# Matriz de confusión para el modelo logit
+# Matriz de confusion para el modelo logit
 logit_conf_matrix <- caret::confusionMatrix(logit_classifications_factor, 
                                             prostate.test$svi,
                                             mode = "everything")
 
-# Matriz de confusión para el modelo probit
+# Matriz de confusion para el modelo probit
 probit_conf_matrix <- caret::confusionMatrix(probit_classifications_factor, 
                                              prostate.test$svi,
                                              mode = "everything")
 
-
-# Mostrar la matriz de confusión y la exactitud para el modelo logit
+# Mostrar la matriz de confusion y la exactitud para el modelo logit
 print("Matriz de Confusión - Modelo Logit")
 print(logit_conf_matrix)
 # Confusion Matrix and Statistics
@@ -470,7 +470,6 @@ logit_accuracy <- logit_conf_matrix$overall['Accuracy']
 print(paste("Exactitud - Modelo Logit:", logit_accuracy))
 # "Exactitud - Modelo Logit: 1"
 
-
 # Mostrar la matriz de confusión y la exactitud para el modelo probit
 print("Matriz de Confusión - Modelo Probit")
 print(probit_conf_matrix)
@@ -503,8 +502,6 @@ print(probit_conf_matrix)
 #       Balanced Accuracy : 1.0000     
 #                                      
 #        'Positive' Class : 0  
-
-
 
 
 # Imprimir exactitud
