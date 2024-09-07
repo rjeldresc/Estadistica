@@ -3,7 +3,8 @@
 ## Series de Tiempo ##
 ## Script Sesión 4  ##
 ######################
-
+data() #para listar Data sets in package ‘datasets’
+setwd("d:/dev/estadistica/Series de Tiempo/")
 ## Modelo ARMA Estacional ##
 
 ## Ejemplo: Accidental Deaths in the US 1973–1978
@@ -19,12 +20,12 @@ plot(X)
 
 
 ## ¿Proceso MA(q)?
-acf(c(X), ylim = c(-1,+1), lag.max = 12)
+acf(c(X), ylim = c(-1,+1), lag.max = 12) #hay 8 lag significativos
 acf(c(X), ylim = c(-0.5,+0.5), lag.max = 12)
 q <- 11
 
 ## ¿Proceso SMA(q)?
-acf(c(X), ylim = c(-1,+1), lag.max = 72)
+acf(c(X), ylim = c(-1,+1), lag.max = 72) #72 para graficar con todos los datos
 Q <- 4
 
 ## ¿Proceso AR(p)?
@@ -43,23 +44,23 @@ modelo <- forecast::auto.arima(y = X, max.p = p, max.q = q, max.P = P, max.Q = Q
 summary(modelo)
 plot(modelo) ## Se espera en este caso que las 13 raices invesas esten dentro del circulo.
 
-pre <- forecast::forecast(modelo, h = 24, level = 0.95)
+pre <- forecast::forecast(modelo, h = 24, level = 0.95) #h = horizonte
 pre
-plot(pre)
+plot(pre) #la banda de prediccion tiene como supuesto la blancura
 
 ## Se cumplira la blancura?
-tsdiag(modelo, 24)
-tsdiag(modelo, 36)
+tsdiag(modelo, 24) #
+tsdiag(modelo, 36) #cumple blancura
 
 LSTS::ts.diag(c(modelo$res), 24)
 ## Como cumple la blancura --> Valida la banda de predicción
 
-## Seran los residuos Normales?
-ks.test(scale(c(modelo$res)), "pnorm")$p.value
+## ¿Seran los residuos Normales?
+ks.test(scale(c(modelo$res)), "pnorm")$p.value #0.957828
 ## No se rechaza la normalidad
 
-## Seran los residuos homocedasticos?
-lmtest::bptest(lm(modelo$res ~ c(time(modelo$res))))$p.value
+## ¿Seran los residuos homocedasticos?
+lmtest::bptest(lm(modelo$res ~ c(time(modelo$res))))$p.value #0.2892881
 ## No se rechaza la normalidad
 
 source("summary.arima.R")
