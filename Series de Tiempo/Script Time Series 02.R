@@ -3,7 +3,7 @@
 ## Series de Tiempo ##
 ## Script Sesión 2  ##
 ######################
-
+setwd("d:/dev/Estadistica/Series de Tiempo/")
 ###########################
 ## 1. Dependencia Serial ##
 ###########################
