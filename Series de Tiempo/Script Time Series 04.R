@@ -78,12 +78,12 @@ IPC <- ts(Data$IPC, start = c(2009,12), frequency = 12)
 par(bty = "n", las = 1)
 plot(Y, col = "gray", lwd = 2)
 
-## Esta serie presneta una tendencia estocastica 
-## Que grado de integración presenta?
-forecast::ndiffs(Y)
-forecast::ndiffs(Y, test = "kpss")
-forecast::ndiffs(Y, test = "adf")
-forecast::ndiffs(Y, test = "pp")
+## Esta serie presenta una tendencia estocastica 
+## ¿Que grado de integración presenta?
+forecast::ndiffs(Y) #entrega como output un 'd'
+forecast::ndiffs(Y, test = "kpss")#2
+forecast::ndiffs(Y, test = "adf") #1
+forecast::ndiffs(Y, test = "pp")  #1
 ## Observamos una discordancia entre los test
 Y.1 <- diff(Y, lag = 1, differences = 1) ## (1-B)^1 Y[t]
 Y.2 <- diff(Y, lag = 1, differences = 2) ## (1-B)^2 Y[t]
@@ -94,14 +94,14 @@ Z <- forecast::auto.arima(Y, d = 0, D = 0)$res
 LSTS::ts.diag(c(Z))
 ## Obtenemos errores correlacionados
 par(mfrow = c(1,3), las = 1)
-plot(Y.1, ylim = c(-0.5, 2))
+plot(Y.1, ylim = c(-0.5, 2)) #variacion mensual
 plot(Y.2, ylim = c(-0.5, 2))
 plot(Y.3, ylim = c(-0.5, 2))
 
 sd(Y.2)/sd(Y.1)-1 ## Al hacer dos diferenciaciones se observa un incremento en la variabildiad de un 4%
 sd(Y.3)/sd(Y.2)-1 ## Aca se observa un incremento del 73%
 
-## Potencialmenet 1 y 2 diferenciones son razobles
+## Potencialmente 1 y 2 diferenciones son razonables
 
 par(mfrow = c(1,2))
 acf(c(Y.2), lag.max = 60, ylim = c(-1,+1))
@@ -164,7 +164,7 @@ plot(pre)
 plot(pre, xlim = c(2023,2025), ylim = c(90,110))
 lines(IPC, col = "red")
 
-## Vamos a incorporar nueva incormación para ir mejorando la predicción
+## Vamos a incorporar nueva información para ir mejorando la predicción
 new.Y <- ts(Data$IPC, start = c(2009,12), frequency = 12, end = c(2023,08))
 p <- modelo_3$arma[1]
 q <- modelo_3$arma[2]
