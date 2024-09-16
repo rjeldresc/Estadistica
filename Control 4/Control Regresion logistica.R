@@ -360,6 +360,9 @@ interaction.plot(
   col = rainbow(length(unique(newdata$lpsa)))
 )
 
+# se adjunta detalle en pdf de los interaction.plot
+
+
 #Intervalos de Confianza Para el modelo logit
 # Calcular los intervalos de confianza
 logit_upper <- logit_predictions$fit + qnorm(0.975) * logit_predictions$se.fit

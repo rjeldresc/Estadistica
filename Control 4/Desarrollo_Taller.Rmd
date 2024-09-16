@@ -5,6 +5,9 @@ date: "Fecha de entrega: 2024-08-21 a las 18:00 horas"
 output: html_document
 ---
 
+```{r}
+
+```
 
 
 ```{r setup, include=FALSE}

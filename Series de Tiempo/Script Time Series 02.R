@@ -14,7 +14,7 @@ n <- 500
 mu <- 1
 X <- rnorm(n, mean = 0, sd = 0.15) + mu
 X <- ts(X) #se le da atributo de series de tiempo
-par(bty = "n", las = 1)
+par(bty = "n", las = 1) #quita la caja
 plot(X, ylab = "", col = "gray", lwd = 2, xlim =c(0,600))
 
 modelo <- lm(X ~ time(X)) #regresion de datos vs tiempo
@@ -28,13 +28,13 @@ abline(h = mean(X), lty = 2, col = "red")
 
 ## ¿Se podrá mejorar la predicción? Si existe dependencia serial si podríamos
 
-## Como se puede obtener una medida de auto dependnecia: acf(...)
+## Como se puede obtener una medida de auto dependencia: acf(...)
 acf(X, type = "covariance", lag.max = 10, lwd = 3)
 axis(1, 0:10)
 
 acf(X, type = "correlation", lag.max = 10, lwd = 3)
 axis(1, 0:10)
-?LSTS
+
 ## Ejemplo 2: Anchos de anillos de crecimiento
 X <- LSTS::malleco
 plot(X, xlim = c(1200, 2100))
@@ -48,6 +48,7 @@ lmtest::bptest(modelo)$p.value
 ## Predicción ##
 abline(h = mean(X), lty = 2, col = "red", lwd = 3)
 
+#para ver si hay dependencia, en este caso hay dependencia
 acf(X, type = "correlation", lag.max = 10, lwd = 3) #para ver dependencia
 axis(1, 0:10)
 
@@ -121,12 +122,16 @@ d <- 1 ## Numero de diferenciaciones
 k <- 1 ## Lag
 W <- diff(X, lag = k, differences = 1)
 plot(W)
-abline(h = mean(W), lty = 2)
+abline(h = mean(W), lty = 2) #agrega media a una serie estacionaria
 sd(W)
+
+#caso con 2 diferenciadores, aumenta la variabilidad
 W <- diff(X, lag = k, differences = 2)
 plot(W)
 sd(W)
 abline(h = mean(W), lty = 2)
+
+#caso con 3 diferenciadores, aumenta la variabilidad
 W <- diff(X, lag = k, differences = 3)
 plot(W)
 abline(h = mean(W), lty = 2)

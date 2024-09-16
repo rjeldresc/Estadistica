@@ -16,9 +16,9 @@
 ## Importar Data Frame
 Data <- rio::import("co2.xlsx")
 
-## Asgnar atributo de time serie al vector CO2
+## Asignar atributo de time serie al vector CO2
 Y <- ts(Data$CO2, start = c(1959,1), frequency = 12)
-lambda <- round(forecast::BoxCox.lambda(x = Y, method = "guerrero", lower = 0, upper = 1), 1)
+lambda <- round(forecast::BoxCox.lambda(x = Y, method = "guerrero", lower = 0, upper = 1), 1) #0.9
 ## Preferimos no aplicar transformación
 
 ## Largo del vector
@@ -31,7 +31,7 @@ plot(Y)
 ## supone que la tendencia y estacionalidad se generan
 ## a partir de incrementos estacionarios 
 ## Para obtener la serie estacionaria, es necesario 
-## direnciar regular (d veces) y estacionalmente (D veces)
+## diferencias regular (d veces) y estacionalmente (D veces)
 
 ## ¿Que valores de "d" y "D" son recomendables?
 
@@ -49,11 +49,11 @@ D <- forecast::nsdiffs(Y.1)
 Y.1.12 <- diff(Y.1, lag = s, difference = D)
 plot(Y.1.12)
 acf(Y.1.12, lag.max = 200, na.action = na.pass)
-
+acf(c(Y.1.12), lag.max = 60, na.action = na.pass)
 ## Obtengamos los valores p, q, P y Q para ajustar ARMA y/o SARMA
 
 ## Con ACF obtenemos q y Q
-acf(c(Y.1.12), lag.max = 11, na.action = na.pass)
+acf(c(Y.1.12), lag.max = 11, na.action = na.pass) #hace un zoom a los primeros 11 lag
 q <- 11
 acf(c(Y.1.12), lag.max = 84, na.action = na.pass)
 Q <- 1
@@ -66,7 +66,7 @@ P <- 7
 
 ## Modelo preliminar basado en auto.arima
 Y.total <- Y
-Y <- window(Y.total, start = c(1959,1), end = c(2020,12))
+Y <- window(Y.total, start = c(1959,1), end = c(2020,12)) #se elije un segmento
 mod.01 <- forecast::auto.arima(y = Y, d = d, D = D, max.p = p, max.q = q, max.P = P, max.Q = Q)
 
 ## Raices inversas
@@ -100,7 +100,7 @@ pre <- forecast::forecast(mod.01, h = 44)
 plot(pre, xlim = c(2018, 2025), ylim = c(400, 430))
 lines(Y.total, lwd = 2, col = "red")
 
-mean(abs(pre$mean/Y.total-1))*100
+mean(abs(pre$mean/Y.total-1))*100 #porcentaje de lo que se equivocó 
 
 ######################
 ## Imacec No Minero ##
@@ -205,7 +205,7 @@ head(PIB)
 PIB$Tiempo <- PIB$YEAR + (PIB$MONTH-1)/12
 
 plot(PIB_NM ~ Tiempo, data = PIB)
-
+?smooth.spline
 ## Mensualizar PIB Tendencial
 fit.smooth <- smooth.spline(PIB$PIB_NM ~ PIB$Tiempo, spar = 0)
 t <- seq(2003,2030,1/12)
@@ -216,7 +216,7 @@ xreg <- as.matrix(data.frame(pib = predict(fit.smooth, time(Y))$y/1000 ))
 cor(Y,xreg)
 plot(Y,xreg)
 
-mod.01 <- forecast::Arima(y = Y, xreg = xreg)
+mod.01 <- forecast::Arima(y = Y, xreg = xreg) #xreg matriz de diseño
 
 plot(Y)
 lines(mod.01$fitted, col = "red")
