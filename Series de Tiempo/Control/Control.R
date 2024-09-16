@@ -4,15 +4,7 @@
 ## Alumno: Rodrigo Jeldres Carrasco ##
 ######################################
 
-## Consultar Carpeta de Trabajo ##
-getwd()
-
-setwd("C:/dev/Estadistica/Series de Tiempo/Control")
-
-## Consultar archivos disponible en la carpeta ##
-dir()
-
-source("TS.diag.R")
+setwd("d:/dev/Estadistica/Series de Tiempo/Control")
 
 ## Importar datos en formato xlsx ##
 Base <- rio::import("Demanda_Real.xlsx")

@@ -18,8 +18,8 @@ acf(X, lag.max = 10, ylim = c(-1,+1), lwd = 3) #suponer estacionario
 ## El comportamiento es muy similar al teorico de un AR(1) con 0 < phi < 1.
 
 ## ¿Cuál valor de phi sería adecuado? 
-rho.1 <- acf(X, lag.max = 10, plot = F)$acf[2,,1]
-phi <- rho.1
+rho.1 <- acf(X, lag.max = 10, plot = F)$acf[2,,1] # 0.6435419
+phi <- rho.1 # 0.6435419
 
 ## En R la función ARMAacf calcula el ACF teórico de un ARMA
 ACF <- ARMAacf(ar = c(phi), lag.max = 10)
@@ -32,7 +32,7 @@ mean(X)
 
 ## Hay varias funciones que estiman los coeficientes ARMA, por ejemplo,
 ## las siguientes estiman por Máxima Verosimilitud
-arima(X, order = c(1,0,0))$coef
+arima(X, order = c(1,0,0))$coef #p = 1, d numero de diferenciadores en este caso es 0 es estacionario , q  
 forecast::Arima(X, order = c(1,0,0))$coef  
 
 modelo <- forecast::Arima(X, order = c(1,0,0))
@@ -59,15 +59,15 @@ plot(X)
 acf(X)  ## MA(19) se cuentan las barras
 pacf(X) ## AR(20)
 
-fit <- forecast::auto.arima(y = X, max.p = 20, max.q = 19, lambda = NULL)
-fit #propuesta ar1
+fit <- forecast::auto.arima(y = X, max.p = 20, max.q = 19, lambda = NULL) # lambda no hace transformacion
+fit # propuesta ar1
 summary(fit)
 plot(fit) #grafico raices inversas
 
 source("TS.diag.R")
 source("summary.arima.R")
 
-summary_arima(fit, fixed = c(NA,NA)) #
+summary_arima(fit, fixed = c(NA,NA)) #son coeficientes de NA
 TS.diag(c(fit$residuals), lag = 12) #lag hasta 12
 
 pre <- forecast::forecast(fit, h = 30, level = 0.95) #prediccion caso arma da ultimos 30 años
