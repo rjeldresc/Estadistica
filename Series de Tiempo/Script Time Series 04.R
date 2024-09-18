@@ -21,7 +21,7 @@ plot(X)
 
 ## ¿Proceso MA(q)?
 acf(c(X), ylim = c(-1,+1), lag.max = 12) #hay 8 lag significativos
-acf(c(X), ylim = c(-0.5,+0.5), lag.max = 12)
+acf(c(X), ylim = c(-0.5,+0.5), lag.max = 12) # lo mismo pero con un zoom
 q <- 11
 
 ## ¿Proceso SMA(q)?
@@ -98,10 +98,10 @@ plot(Y.1, ylim = c(-0.5, 2)) #variacion mensual
 plot(Y.2, ylim = c(-0.5, 2))
 plot(Y.3, ylim = c(-0.5, 2))
 
-sd(Y.2)/sd(Y.1)-1 ## Al hacer dos diferenciaciones se observa un incremento en la variabildiad de un 4%
+sd(Y.2)/sd(Y.1)-1 ## Al hacer dos diferenciaciones se observa un incremento en la variabilidad de un 4%
 sd(Y.3)/sd(Y.2)-1 ## Aca se observa un incremento del 73%
 
-## Potencialmente 1 y 2 diferenciones son razonables
+## Potencialmente 1 y 2 diferenciaciones son razonables
 
 par(mfrow = c(1,2))
 acf(c(Y.2), lag.max = 60, ylim = c(-1,+1))
@@ -117,7 +117,7 @@ summary(modelo)
 summary_arima(fit = modelo, fixed = c(NA,NA,NA))
 ## valor-p sma2 > 10% --> Se propone sacarlo del modelo
 
-modelo <- forecast::Arima(y = Y, order = c(0,2,1), seasonal = c(0,0,1))
+modelo <- forecast::Arima(y = Y, order = c(0,2,1), seasonal = c(0,0,1)) #0 porque no se considera parte AR, 2 diferenciadores, 1 porque es MA1
 summary_arima(fit = modelo, fixed = c(NA,NA))
 par(mfrow = c(1,1))
 plot(modelo)
@@ -125,9 +125,9 @@ plot(modelo)
 
 pre <- forecast::forecast(modelo, h = 12)
 plot(pre)
-## Se cumplio la blancura?
+## ¿Se cumplio la blancura?
 LSTS::ts.diag(c(modelo$residuals), 24)
-## Se observa que en lag 6 y 13 hay una caida evidnete en los valores-p de Box-Ljung
+## Se observa que en lag 6 y 13 hay una caida evidente en los valores-p de Box-Ljung
 ## La incorporación de ma6 (o ar6) y ma13 (o ar13) permitirian
 ## que los valores-p estuvieran más cerca de uno.
 
@@ -191,7 +191,7 @@ new_pre <- forecast::forecast(new_modelo, h = 10)
 plot(new_pre, xlim = c(2023,2025), ylim = c(90,110))
 lines(IPC, col = "red")
 
-mean(abs(new_pre$mean/IPC-1))*100
+mean(abs(new_pre$mean/IPC-1))*100 #error de prediccion en termino absoluto
 
 cbind(new_pre$mean, IPC)
 
