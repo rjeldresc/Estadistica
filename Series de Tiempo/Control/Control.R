@@ -4,22 +4,11 @@
 ## Alumno: Rodrigo Jeldres Carrasco ##
 ######################################
 
+library(forecast)
 setwd("d:/dev/Estadistica/Series de Tiempo/Control")
 
-## Importar datos en formato xlsx ##
 Base <- rio::import("Demanda_Real.xlsx")
-
-## Vista 1ra filas
-head(Base, 10)
-
-## Vista últimas filas
-tail(Base, 20)
-
-# Convertir la base de datos en una serie temporal mensual
-Y <- ts(Base$DEMANDA_REAL_GWH, start = c(2014, 1), end = c(2023,12), frequency = 12)
-
-# Ver los primeros valores para asegurarte de que esté bien construida
-head(Y)
+Y <- ts(Base$DEMANDA_REAL_GWH, start = c(2014,1), frequency = 12, end = c(2023,12))
 
 # Graficar la serie temporal
 plot(Y, main = "Demanda Real de Energía (GWh)", xlab = "Tiempo", ylab = "Demanda GWh")
@@ -42,7 +31,7 @@ xreg[1:24,2] <- 1
 mod2 <- forecast::Arima(Y, xreg = xreg)
 plot(Y)
 lines(mod2$fitted, col = "red")
-MASS::boxcox(Y ~ mod2$fitted)
+MASS::boxcox(Y ~ mod2$fitted) ## No es necesario transformar, ya que el uno esta en el IC.
 
 ## Modelo 3: f(Y[t]) = b0 + b1 * t + dummy + Z[t]
 mod3 <- forecast::Arima(Y, xreg = xreg, lambda = 0)      ## Realiza tranformación logaritmica
@@ -56,6 +45,7 @@ lines(mod3$fitted, col = "red")
 mod4 <- forecast::Arima(Y, xreg = xreg, lambda = NULL, order = c(2,0,2), seasonal = c(1,1,1)) 
 plot(Y)
 lines(mod4$fitted, col = "red")
+
 
 ## ¿Seran los residuos homocedasticos?
 # H0: los residuos son homocedásticos
@@ -105,49 +95,73 @@ lmtest::bptest(lm(mod_sarimax$residuals ~ time(mod_sarimax$residuals)))
 source("TS.diag.R")
 TS.diag(c(mod_sarimax$res))
 
-new_pre <- forecast::forecast(mod_sarimax, h = 36, level = 0.95)
+# Generar valores futuros de los regresores
+# Suponiendo que el regresor 'tiempo' continúa linealmente y que el dummy sigue siendo 0 después del periodo inicial.
+future_xreg <- as.matrix(data.frame(
+  tiempo = (length(Y) + 1):(length(Y) + 36),
+  dummy = rep(0, 36)  # Ajusta si es necesario
+))
 
-
-
-
-PIB <- rio::import("PIB_TENDENCIAL.xlsx")
-
-head(PIB)
-PIB$Tiempo <- PIB$YEAR + (PIB$MONTH-1)/12
-
-plot(PIB_NM ~ Tiempo, data = PIB)
-
-## Mensualizar PIB Tendencial
-fit.smooth <- smooth.spline(PIB$PIB_NM ~ PIB$Tiempo, spar = 0)
-t <- seq(2014,2024,1/12)
-lines(predict(fit.smooth, t)$y~t)
-
-xreg <- as.matrix(data.frame(pib = predict(fit.smooth, time(Y))$y/1000))
-
-cor(Y,xreg)
-plot(Y,xreg)
-
-
-mod.01 <- forecast::Arima(y = Y, xreg = xreg)
-
-plot(Y)
-lines(mod.01$fitted, col = "red")
-
-lambda <- round(forecast::BoxCox.lambda(x = Y, method = "guerrero", lower = 0, upper = 1), 1)
-f.Y <- forecast::BoxCox(x = Y, lambda = lambda)
-plot(f.Y)
-
-mod.02 <- forecast::auto.arima(y = Y, xreg = xreg, lambda = lambda, d = 0)
-summary(mod.02)
-TS.diag(c(mod.02$residuals))
-
-
-
-
-## Predicción ##
-pred <- forecast::forecast(mod.02, h = 7, level = 0.95)
+# Realizar el pronóstico con los nuevos valores de xreg
+new_pre <- forecast::forecast(mod_sarimax, h = 36, level = 0.95, xreg = future_xreg)
 par(mfrow = c(1,1))
-plot(pred, xlim = c(2020,2025), ylim = c(90,130))
-Y. <- ts(PIB$IMACEC_NM, start = c(2014,1), frequency = 12)
-lines(Y., col = "red")
+# Graficar el pronóstico
+plot(new_pre)
+#plot(new_pre, xlim = c(2024,2026), ylim = c(4000,9000))
+Z <- ts(Base$DEMANDA_REAL_GWH, start = c(2014,1), frequency = 12)
+lines(Z, col = "red")
+cbind(new_pre$mean, Z)
+mean(abs(new_pre$mean/Z-1))*100
+
+# Extraer pronósticos anuales
+pred_2024 <- sum(new_pre$mean[1:12])
+pred_2025 <- sum(new_pre$mean[13:24])
+pred_2026 <- sum(new_pre$mean[25:36])
+
+# Calcular tasas de crecimiento anuales
+tasa_2025 <- (pred_2025 - pred_2024) / pred_2024 * 100
+tasa_2026 <- (pred_2026 - pred_2025) / pred_2025 * 100
+
+
+###### Caso con regresor IMACEC
+
+Imacec <- rio::import("Imacec_2024_07.xlsx")
+Imacec_filtered <- Imacec[Imacec$YEAR >= 2014, ]
+head(Imacec_filtered,5)
+
+# Crear la serie de tiempo del regresor IMACEC
+X <- ts(Imacec_filtered$IMACEC, start = c(2014, 1), frequency = 12 , end = c(2023,12))
+
+# Ajustar el modelo SARIMAX usando la serie DEMANDA_REAL_GWH y IMACEC como regresor
+mod_sarimax <- auto.arima(Y, xreg = X, seasonal = TRUE, lambda = "auto")
+
+# Resumen del modelo ajustado
+summary(mod_sarimax)
+
+# Graficar la serie original y el ajuste
+plot(Y, main = "Demanda Real de Energía (GWh) y Ajuste SARIMAX con IMACEC")
+lines(fitted(mod_sarimax), col = "red")
+
+# Supongamos que el IMACEC futuro sigue igual a la media histórica de los últimos 12 meses
+future_imacec <- rep(mean(Imacec_filtered$IMACEC), 12)
+
+# Si tienes proyecciones del IMACEC, puedes usar esas en lugar de la media
+# future_imacec <- c(valor_proyectado_1, valor_proyectado_2, ... , valor_proyectado_12)
+
+# Generar la predicción para los próximos 36 meses
+predicciones <- forecast(mod_sarimax, xreg = future_imacec, h = 36)
+
+# Mostrar el resumen de la predicción
+summary(predicciones)
+
+# Graficar la predicción junto con la serie original
+plot(predicciones, main = "Predicción de Demanda Real de Energía (GWh)")
+
+#comparacion
+Z <- ts(Base$DEMANDA_REAL_GWH, start = c(2014,1), frequency = 12)
+lines(Z, col = "red")
+cbind(predicciones$mean, Z)
+mean(abs(predicciones$mean/Z-1))*100
+
+
 

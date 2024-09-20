@@ -3,7 +3,7 @@
 ## Series de Tiempo ##
 ## Script Sesión 5  ##
 ######################
-
+setwd("d:/dev/estadistica/Series de Tiempo/")
 ## Modelo SARIMA  ##
 
 ## Ejemplo: 
