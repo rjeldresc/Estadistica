@@ -84,6 +84,10 @@ xreg[1:24,2] <- 1  # Dummy para primeros 24 meses como ejemplo
 # Modelo SARIMAX con componentes SARIMA (p,d,q) y regresores
 mod_sarimax <- forecast::auto.arima(Y, xreg = xreg, seasonal = TRUE, lambda = "auto")
 LSTS::ts.diag(c(mod_sarimax$residuals), 36)
+plot(mod_sarimax) ## Raices inversas
+summary(mod_sarimax) # MAPE 1.927336     
+source("summary.arima.R")
+summary_arima(fit = mod_sarimax, fixed = c(NA,NA,NA,NA,NA,NA,NA))
 
 # Graficar ajuste
 plot(Y, main = "Demanda Real de Energía (GWh) y Ajuste SARIMAX")

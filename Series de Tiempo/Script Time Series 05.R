@@ -26,12 +26,17 @@ n <- length(Y)
 
 ## Grafico de la serie
 plot(Y)
+plot(Y , xlim = c(1963, 1965)) #para ver missing data
+
+## interpolacion 
+filtro <- is.na(Y) == F
+fit.smooth <- smooth.spline(Y[filtro] ~	time(Y)[filtro], spar = 0 )
 
 ## Modelo SARIMA:
 ## supone que la tendencia y estacionalidad se generan
 ## a partir de incrementos estacionarios 
 ## Para obtener la serie estacionaria, es necesario 
-## diferencias regular (d veces) y estacionalmente (D veces)
+## diferenciar regular (d veces) y estacionalmente (D veces)
 
 ## ¿Que valores de "d" y "D" son recomendables?
 
@@ -88,14 +93,16 @@ TS.diag(c(mod.01$residuals))
 ## Normalidad
 Z <- mod.01$residuals
 ks.test(scale(na.omit(c(Z))), "pnorm")$p.value
+# 0.9761054 pasa normalidad
 
 ## Homocedacidad
-lmtest::bptest(lm(Z ~ time(Z)))$p.value
+lmtest::bptest(lm(Z ~ time(Z)))$p.value #0.00904166
+#se rechaza Homocedacidad
 ## Potencialmente podríamos evaluar un transformación de 
 ## Box-Cox
 
 ## Predicción
-par(mfrow = c(1,1))
+#par(mfrow = c(1,1))
 pre <- forecast::forecast(mod.01, h = 44)
 plot(pre, xlim = c(2018, 2025), ylim = c(400, 430))
 lines(Y.total, lwd = 2, col = "red")
@@ -137,7 +144,7 @@ P <- 4
 
 ## Modelo auto.arima(...)
 mod.02 <- forecast::auto.arima(y = Y, d = d, D = D, max.p = p, max.q = q, max.P = P, max.Q = Q, lambda = lambda)
-plot(mod.02)
+plot(mod.02);summary(mod.02)
 source("summary.arima.R")
 summary_arima(fit = mod.02, fixed = c(NA,NA,NA))
 source("TS.diag.R")
@@ -154,7 +161,7 @@ mod.04 <- forecast::Arima(y = Y, order = c(1,1,6), seasonal = c(0,1,1), lambda =
 summary_arima(fit = mod.04, fixed = fixed)
 
 ## Eliminemos el ma1
-fixed <- c(0,0,0,0,NA,0,NA,NA)
+fixed <- c(0,0,0,0,NA,0,NA,NA) #con 0 los no significativos, los NA son significativos
 mod.05 <- forecast::Arima(y = Y, order = c(1,1,6), seasonal = c(0,1,1), lambda = lambda, fixed = fixed)
 summary_arima(fit = mod.05, fixed = fixed)
 
