@@ -202,7 +202,7 @@ lines(Y., col = "red")
 
 ## Requiere variables regresoras
 ## Un muy buen regresor es el PIB y para las proyecciones
-## El Pib Tencial No Minero (ministerio de hacieda)
+## El Pib Tendencial No Minero (ministerio de hacienda)
 
 
 
@@ -228,7 +228,7 @@ mod.01 <- forecast::Arima(y = Y, xreg = xreg) #xreg matriz de diseño
 plot(Y)
 lines(mod.01$fitted, col = "red")
 
-mod.02 <- forecast::auto.arima(y = Y, xreg = xreg, lambda = lambda, d = 0)
+mod.02 <- forecast::auto.arima(y = Y, xreg = xreg, lambda = lambda, d = 0) #d = 0 para que no haga diferenciacion
 summary(mod.02)
 TS.diag(c(mod.02$residuals))
 ## Box-Ljung pide estructura en ma4, ma6
@@ -249,3 +249,4 @@ lines(Y., col = "red")
 
 ## MAPE predicción
 100*mean(abs(pred$mean/Y.-1))
+# 2.27966
