@@ -163,10 +163,10 @@ future_imacec <- rep(mean(Imacec_filtered$IMACEC), 36)
 lmtest::bptest(lm(mod_sarimax$residuals ~ time(mod_sarimax$residuals)))
 # Generar la predicción para los próximos 36 meses
 predicciones <- forecast(mod_sarimax, xreg = future_imacec, h = 36)
-
+plot(mod_sarimax)
 # Mostrar el resumen de la predicción
 summary(predicciones)
-
+summary_arima(fit = mod_sarimax, fixed = c(NA,NA,NA))
 # Graficar la predicción junto con la serie original
 plot(predicciones, main = "Predicción de Demanda Real de Energía (GWh)")
 
