@@ -5,7 +5,7 @@ library(samplingbook)
 options(scipen = 999)
 
 # definir el directorio
-setwd("C:/Users/Matias/Desktop/Diplomado 2024/")
+setwd("d:/dev/Estadistica")
 
 # lectura de los datos
 base = readxl::read_excel("Bases de datos/Precenso-comunas.xlsx")
@@ -28,7 +28,7 @@ nrow(base)
 
 # ------------------------------------------------------------------------------
 
-# No puede interesar estimar la proporcion de mujeres
+# Nos puede interesar estimar la proporcion de mujeres
 # con un error cercano al 5% y ademas, vamos a mantener un nivel de confianza al 95%
 # Los expertos dicen que la proporcion es 0.6
 
@@ -56,21 +56,21 @@ sample.size.prop(e = 0.05,
 
 # Y si sabemos que hay un tamaño de poblacion muy grande (o infinito)
 sample.size.prop(e = 0.05,
-                 P = 0.6,
+                 P = 0.6, #segun "consejo" experto , o proporcion considerara por la region
                  N = Inf)
 # Sample size needed: 369
 
-# Que pása si desconocemos la proporcion?
+# Que pasa si desconocemos la proporcion?
 # P = 0.5
 sample.size.prop(e = 0.05,
                  P = 0.5,
                  N = Inf)
 # Sample size needed: 385
 
-# Que pása si disminuyo el error a 3%
+# Que pasa si disminuyo el error a 3%
 # P = 0.5
 sample.size.prop(e = 0.03,
-                 P = 0.5,
+                 P = 0.5, #cuando la proporcion es desconocida
                  N = Inf)
 # Sample size needed: 1068
 
