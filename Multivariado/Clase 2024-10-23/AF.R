@@ -43,7 +43,7 @@ desemp <- data.frame(datos[,-1], row.names = datos$"RUT")
 head(desemp)
 summary(desemp)
 # Tenemos "caracteres" por la presencia de NA - transformamos todas las columnas a numerica
-desemp1 <- as.data.frame(apply(desemp,2,as.numeric))
+desemp1 <- as.data.frame(apply(desemp,2,as.numeric)) # 2 es para las columnas
 # apply() es una función que aplica una función a las filas o columnas de una matriz o data frame
 # argumento, 2, indica que la función debe aplicarse a las columnas (si fuera 1, se aplicaría a las filas)
 # as.numeric, convierte los valores de cada columna en números
@@ -142,7 +142,7 @@ print(loadings(AF), cutoff = 0.17, sort = TRUE, digits = 3)
 # sort = TRUE: Ordena las cargas dentro de cada componente para mostrar los valores más grandes primero
 # digits = 3: Redondea los valores de las cargas a tres decimales
 
-# otraalternativa
+# otra alternativa
 AF2 <- fa(desemp1,nfactors = 4,rotate = "varimax",fm="ml")
 fa.diagram(AF2)
 
