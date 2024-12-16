@@ -81,6 +81,7 @@ calcular_estadisticas <- function(data) {
     mutate(fecha = as.Date(fecha)) %>%  # Asegurar formato de fecha
     group_by(fecha) %>%                # Agrupar por día
     summarize(
+      n = n(),                                             # Tamaño muestral
       promedio = mean(tiempo_respuesta, na.rm = TRUE),     # Promedio
       mediana = median(tiempo_respuesta, na.rm = TRUE),    # Mediana
       desviacion = sd(tiempo_respuesta, na.rm = TRUE),     # Desviación estándar
