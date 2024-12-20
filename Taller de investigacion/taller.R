@@ -196,3 +196,8 @@ ggplot(muestra_4000, aes(x = tiempo_respuesta)) +
     y = "Frecuencia"
   ) +
   theme_minimal()
+
+
+#### analisis para los 3 casos
+
+
