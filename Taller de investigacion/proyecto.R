@@ -139,4 +139,142 @@ ggplot(datos_dias_criticos, aes(x = tiempo_respuesta)) +
   theme_minimal()
 
 
+#### 2 Análisis mensual para años 2022 y 2023 (foco en diciembre)
+
+# Cargar librerías necesarias
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+library(car)      # Para Levene Test
+library(emmeans)  # Para análisis post-hoc
+
+# Configurar el directorio de trabajo
+setwd("d:/dev/estadistica/Taller de investigacion/")
+
+# Leer los datos
+datos <- read.csv("tiempos_respuesta.csv", sep = ";")
+
+# Convertir la columna de fecha a formato datetime
+datos$fecha <- ymd_hms(datos$fecha)
+
+# Filtrar datos para noviembre y diciembre de 2022 y 2023
+datos_nov_dic <- datos %>%
+  filter(
+    month(fecha) %in% c(11, 12),      # Seleccionar noviembre y diciembre
+    year(fecha) %in% c(2022, 2023)   # Incluir solo 2022 y 2023
+  ) %>%
+  mutate(
+    mes = factor(month(fecha, label = TRUE, abbr = TRUE)),  # Etiqueta mes
+    año = factor(year(fecha))                              # Etiqueta año
+  )
+
+# Calcular estadísticas descriptivas por año y mes
+estadisticas_nov_dic <- datos_nov_dic %>%
+  group_by(año, mes) %>%
+  summarize(
+    promedio = mean(tiempo_respuesta),
+    mediana = median(tiempo_respuesta),
+    desviacion = sd(tiempo_respuesta),
+    n = n()
+  )
+print(estadisticas_nov_dic)
+
+# Graficar los promedios por año y mes
+ggplot(estadisticas_nov_dic, aes(x = mes, y = promedio, fill = año)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Promedio de Tiempos de Respuesta en Noviembre y Diciembre",
+    x = "Mes",
+    y = "Promedio de Tiempos de Respuesta (ms)",
+    fill = "Año"
+  ) +
+  theme_minimal()
+
+# Preparar datos para ANOVA
+anova_data <- datos_nov_dic %>%
+  select(año, mes, tiempo_respuesta)
+
+# Prueba de homogeneidad de varianzas
+levene_test <- leveneTest(tiempo_respuesta ~ mes * año, data = anova_data)
+print("Prueba de homogeneidad de varianzas:")
+print(levene_test)
+
+# Realizar ANOVA
+anova_model <- aov(tiempo_respuesta ~ año * mes, data = anova_data)
+anova_summary <- summary(anova_model)
+
+print("Resultados del ANOVA:")
+print(anova_summary)
+
+# Extraer valores p de las pruebas F
+p_año <- anova_summary[[1]]$`Pr(>F)`[1]
+p_mes <- anova_summary[[1]]$`Pr(>F)`[2]
+p_interaccion <- anova_summary[[1]]$`Pr(>F)`[3]
+
+# Verificar significancia
+if (p_año < 0.05) {
+  print("El factor 'año' tiene un efecto significativo.")
+} else {
+  print("El factor 'año' no tiene un efecto significativo.")
+}
+
+if (p_mes < 0.05) {
+  print("El factor 'mes' tiene un efecto significativo.")
+} else {
+  print("El factor 'mes' no tiene un efecto significativo.")
+}
+
+if (p_interaccion < 0.05) {
+  print("La interacción entre 'año' y 'mes' tiene un efecto significativo.")
+} else {
+  print("No hay efecto significativo en la interacción entre 'año' y 'mes'.")
+}
+
+# Realizar análisis post-hoc si el ANOVA muestra significancia
+if (p_interaccion < 0.05) {
+  post_hoc <- emmeans(anova_model, pairwise ~ año * mes)
+  print("Resultados del análisis post-hoc:")
+  print(post_hoc$contrasts)
+}
+
+# Boxplot para observar las distribuciones
+ggplot(datos_nov_dic, aes(x = interaction(mes, año), y = tiempo_respuesta, fill = mes)) +
+  geom_boxplot() +
+  labs(
+    title = "Distribución de Tiempos de Respuesta por Mes y Año",
+    x = "Mes y Año",
+    y = "Tiempo de Respuesta (ms)",
+    fill = "Mes"
+  ) +
+  theme_minimal()
+
+
+
+#### Análisis por tamaños de muestra (100, 1000, 4000 registros)
+
+set.seed(20241221)  # Asegurar reproducibilidad
+muestras <- list(
+  muestra_100 = datos_nov_dic %>% sample_n(100),
+  muestra_1000 = datos_nov_dic %>% sample_n(1000),
+  muestra_4000 = datos_nov_dic %>% sample_n(4000)
+)
+
+resultados_estadisticas <- lapply(muestras, function(muestra) {
+  muestra %>%
+    group_by(año, mes) %>%
+    summarize(
+      promedio = mean(tiempo_respuesta),
+      mediana = median(tiempo_respuesta),
+      desviacion = sd(tiempo_respuesta),
+      n = n()
+    )
+})
+
+
+resultados_anova <- lapply(muestras, function(muestra) {
+  anova_model <- aov(tiempo_respuesta ~ año * mes, data = muestra)
+  summary(anova_model)
+})
+
 
