@@ -278,3 +278,94 @@ resultados_anova <- lapply(muestras, function(muestra) {
 })
 
 
+#graficos para resultados_estadisticas
+
+
+# Librerías necesarias
+library(ggplot2)
+library(gridExtra)
+
+# Función para generar los gráficos
+generar_graficos <- function(datos, titulo_base) {
+  # Gráfico de barras con promedios por mes y año
+  grafico_barras <- ggplot(datos, aes(x = mes, y = promedio, fill = año, group = año)) +
+    geom_bar(stat = "identity", position = position_dodge(0.8), alpha = 0.8) +
+    labs(title = paste("Promedios por Mes y Año -", titulo_base),
+         x = "Mes",
+         y = "Promedio de Tiempos de Respuesta") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  # Gráfico de barras con barras de error (desviaciones estándar)
+  grafico_error_barras <- ggplot(datos, aes(x = mes, y = promedio, fill = año, group = año)) +
+    geom_bar(stat = "identity", position = position_dodge(0.8), alpha = 0.8) +
+    geom_errorbar(aes(ymin = promedio - desviacion, ymax = promedio + desviacion),
+                  position = position_dodge(0.8), width = 0.2, color = "black") +
+    labs(title = paste("Promedios y Desviaciones -", titulo_base),
+         x = "Mes",
+         y = "Promedio de Tiempos de Respuesta") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  # Gráfico de interacción entre año y mes
+  grafico_interaccion <- ggplot(datos, aes(x = mes, y = promedio, color = año, group = año)) +
+    geom_line(size = 1.2) +
+    geom_point(size = 3) +
+    labs(title = paste("Interacción Año y Mes -", titulo_base),
+         x = "Mes",
+         y = "Promedio de Tiempos de Respuesta") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5))
+  
+  # Devolver los gráficos
+  return(list(barras = grafico_barras, error_barras = grafico_error_barras, interaccion = grafico_interaccion))
+}
+
+# Generar los gráficos para cada muestra
+graficos_muestra_100 <- generar_graficos(resultados_estadisticas$muestra_100, "Muestra 100")
+graficos_muestra_1000 <- generar_graficos(resultados_estadisticas$muestra_1000, "Muestra 1000")
+graficos_muestra_4000 <- generar_graficos(resultados_estadisticas$muestra_4000, "Muestra 4000")
+
+# Mostrar gráficos para cada muestra en conjuntos de 3
+grid.arrange(graficos_muestra_100$barras, graficos_muestra_100$error_barras, graficos_muestra_100$interaccion, ncol = 3)
+grid.arrange(graficos_muestra_1000$barras, graficos_muestra_1000$error_barras, graficos_muestra_1000$interaccion, ncol = 3)
+grid.arrange(graficos_muestra_4000$barras, graficos_muestra_4000$error_barras, graficos_muestra_4000$interaccion, ncol = 3)
+
+
+#### tabla resumen
+
+# Crear una función para generar el resumen de estadísticas
+generar_tabla_resumen <- function(datos, nombre_muestra) {
+  resumen <- datos %>%
+    group_by(año, mes) %>%
+    summarise(
+      promedio = mean(promedio),
+      desviacion = mean(desviacion),
+      n = mean(n),
+      #n = n(),
+      .groups = "drop" # Eliminar agrupación y suprimir el mensaje
+    ) %>%
+    mutate(muestra = nombre_muestra)
+  return(resumen)
+}
+
+# Generar tablas resumen para las tres muestras
+resumen_100 <- generar_tabla_resumen(resultados_estadisticas$muestra_100, "Muestra 100")
+resumen_1000 <- generar_tabla_resumen(resultados_estadisticas$muestra_1000, "Muestra 1000")
+resumen_4000 <- generar_tabla_resumen(resultados_estadisticas$muestra_4000, "Muestra 4000")
+
+# Combinar las tablas en un único data frame
+tabla_resumen <- bind_rows(resumen_100, resumen_1000, resumen_4000)
+
+# Formatear los valores con 2 decimales y usar coma como separador decimal
+tabla_resumen <- tabla_resumen %>%
+  mutate(
+    promedio = format(round(promedio, 2), decimal.mark = ","),
+    desviacion = format(round(desviacion, 2), decimal.mark = ","),
+    n = round(n, 2) # El tamaño de muestra (n) no necesita coma como separador
+  )
+
+# Guardar la tabla en un archivo CSV con ; como separador
+write.csv2(tabla_resumen, "resumen_estadisticas.csv", row.names = FALSE)
+
+# Nota: write.csv2 usa automáticamente ; como separador y , como separador decimal.
