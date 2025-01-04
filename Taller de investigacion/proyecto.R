@@ -309,7 +309,7 @@ generar_graficos <- function(datos, titulo_base) {
   
   # Gráfico de interacción entre año y mes
   grafico_interaccion <- ggplot(datos, aes(x = mes, y = promedio, color = año, group = año)) +
-    geom_line(size = 1.2) +
+    geom_line(linewidth  = 1.2) +
     geom_point(size = 3) +
     labs(title = paste("Interacción Año y Mes -", titulo_base),
          x = "Mes",
@@ -369,3 +369,168 @@ tabla_resumen <- tabla_resumen %>%
 write.csv2(tabla_resumen, "resumen_estadisticas.csv", row.names = FALSE)
 
 # Nota: write.csv2 usa automáticamente ; como separador y , como separador decimal.
+
+
+
+# Supongamos que tu dataframe original se llama "datos"
+# Convertir la columna fecha a formato de fecha y hora
+datos2 <- datos %>%
+  mutate(fecha = as.POSIXct(fecha, format = "%Y-%m-%d %H:%M:%S"))
+
+# Agregar las nuevas columnas al dataframe
+datos_transformado <- datos2 %>%
+  mutate(
+    DiaSemana = weekdays(fecha, abbreviate = FALSE), # Nombre del día
+    DiaCritico = ifelse(DiaSemana %in% c("jueves", "viernes"), 1, 0), # 1 si es jueves o viernes
+    DiaNumerico = wday(fecha, label = FALSE, week_start = 1), # Día numérico (1 = lunes, 7 = domingo)
+    DiaNumericoMes = day(fecha)    ,                    # Día del mes
+    MesNumerico = month(fecha),                         # Número del mes (1 = enero, 12 = diciembre)
+    SemanaNumerico = isoweek(fecha),                    # Número de la semana (ISO)
+    Anio = year(fecha)                                  # Año de la fecha
+    )
+
+# Visualizar los primeros registros
+head(datos_transformado)
+
+
+# Agrupar por día y calcular la mediana
+datos_agrupados <- datos_transformado %>%
+  mutate(Dia = as.Date(fecha)) %>% # Extraer la fecha sin hora
+  group_by(Dia) %>%               # Agrupar por día
+  summarise(
+    tiempo_respuesta_MEDIANA = median(tiempo_respuesta, na.rm = TRUE), # Mediana del tiempo de respuesta
+    DiaSemana = first(DiaSemana),      # Mantener el nombre del día
+    DiaCritico = first(DiaCritico),    # Mantener si es día crítico
+    DiaNumerico = first(DiaNumerico),  # Día de la semana
+    DiaNumericoMes = first(DiaNumericoMes), # Día del mes
+    MesNumerico = first(MesNumerico),  # Número del mes
+    SemanaNumerico = first(SemanaNumerico), # Número de la semana
+    Anio = first(Anio)                 # Año
+  ) %>%
+  ungroup() # Desagrupar
+
+# Visualizar los primeros registros
+head(datos_agrupados)
+
+# Guardar el dataframe en un archivo CSV con separador de punto y coma
+write.csv(datos_agrupados, "datos_agrupados.csv", row.names = FALSE, sep = ";")
+
+
+# Verificar los nombres de las columnas en datos_agrupados
+colnames(datos_agrupados)
+
+
+##1
+
+# Convertir 'Dia' a formato numérico continuo
+tiempo <- as.numeric(datos_agrupados$Dia - min(datos_agrupados$Dia))
+
+# Verificar el rango de 'tiempo' para asegurarse que esté correcto
+range(tiempo)
+
+
+
+
+
+##2
+# Ajuste del modelo de regresión lineal
+mod <- lm(tiempo_respuesta_MEDIANA ~ tiempo, data = datos_agrupados)
+
+# Resumen del modelo
+summary(mod)
+
+
+
+##3
+# Graficar los datos originales
+plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
+     type = "l", col = "black", 
+     xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
+     main = "Tiempo de Respuesta vs Fecha")
+
+# Añadir la línea ajustada (modelo de regresión)
+lines(datos_agrupados$Dia, mod$fitted.values, col = "red", lwd = 2)
+
+
+##4 Ajustar el modelo con el efecto del mes:
+# Crear la variable 'mes' (el número de mes para cada fecha)
+mes <- factor(format(datos_agrupados$Dia, "%m"))
+
+# Ajustar el modelo con 'tiempo' y 'mes' como variables
+mod2 <- lm(tiempo_respuesta_MEDIANA ~ tiempo + mes, data = datos_agrupados)
+
+# Resumen del modelo con el efecto de los meses
+summary(mod2)
+
+
+
+##6
+
+# Graficar los datos originales
+plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
+     type = "l", col = "black", 
+     xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
+     main = "Tiempo de Respuesta vs Fecha con Ajuste")
+
+# Añadir la línea ajustada con mod2
+lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
+
+
+
+## 7 Predicciones para el año 2024:
+
+# Crear un vector de fechas desde el 2024-11-12 hasta el 2025-06-30
+fechas_prediccion <- seq(from = as.Date("2024-11-12"), to = as.Date("2025-06-30"), by = "days")
+
+# Verificar las primeras fechas generadas
+head(fechas_prediccion)
+
+
+# Paso 1: Crear la variable mes_prediccion
+mes_prediccion <- as.integer(format(fechas_prediccion, "%m"))
+
+# Convertir mes_prediccion en un factor con los mismos niveles que en los datos de entrenamiento
+mes_prediccion <- factor(mes_prediccion, levels = levels(datos_agrupados$MesNumerico))
+
+# Paso 2: Crear la tabla de predicción
+tablaPred <- data.frame(
+  tiempo = as.numeric(fechas_prediccion),  # Convertir fechas a numéricas
+  mes = mes_prediccion  # Usar los meses con los niveles correctos
+)
+
+# Paso 3: Asegurarse de que las variables dummy estén creadas correctamente
+tablaPred <- tablaPred %>%
+  mutate(
+    mes02 = ifelse(mes == 2, 1, 0),
+    mes03 = ifelse(mes == 3, 1, 0),
+    mes04 = ifelse(mes == 4, 1, 0),
+    mes05 = ifelse(mes == 5, 1, 0),
+    mes06 = ifelse(mes == 6, 1, 0),
+    mes07 = ifelse(mes == 7, 1, 0),
+    mes08 = ifelse(mes == 8, 1, 0),
+    mes09 = ifelse(mes == 9, 1, 0),
+    mes10 = ifelse(mes == 10, 1, 0),
+    mes11 = ifelse(mes == 11, 1, 0),
+    mes12 = ifelse(mes == 12, 1, 0)
+  ) %>%
+  select(-mes)  # Eliminar la columna 'mes' ya que ahora tenemos las dummies
+
+# Verificar la tabla de predicción y las columnas dummy
+head(tablaPred)
+
+# Paso 4: Hacer las predicciones con el modelo
+pred <- predict(mod2, newdata = tablaPred)
+
+# Verificar las primeras predicciones
+head(pred)
+
+
+
+##9. Graficar las predicciones para 2024:
+
+# Graficar los datos originales
+plot(datos_agrupados$Dia, datos_agrupados$tiempo_respuesta_MEDIANA, type = "l", col = "black", 
+     xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", main = "Predicciones de Tiempo de Respuesta")
+
+# Graficar las predicciones generadas
+lines(fechas_prediccion, pred, col = "blue", lwd = 2)
