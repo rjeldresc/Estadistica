@@ -477,60 +477,223 @@ lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
 
 
 
-## 7 Predicciones para el año 2024:
+## 7 Predicciones para el año 2025
 
-# Crear un vector de fechas desde el 2024-11-12 hasta el 2025-06-30
+
+# Crear un rango de fechas para predicción
 fechas_prediccion <- seq(from = as.Date("2024-11-12"), to = as.Date("2025-06-30"), by = "days")
 
-# Verificar las primeras fechas generadas
-head(fechas_prediccion)
+# Calcular 'tiempo2' para estas fechas
+tiempo2 <- as.numeric(fechas_prediccion - min(datos_agrupados$Dia))
+
+# Crear el factor 'mes' para estas fechas
+mes <- factor(format(fechas_prediccion, "%m"))
+
+# Crear la tabla de predicción
+tabla_prediccion <- data.frame(tiempo = tiempo2, mes = mes)
+
+# Generar las predicciones usando el modelo ajustado
+predicciones <- predict(mod2, newdata = tabla_prediccion)
+
+# Agregar las predicciones al dataframe
+tabla_prediccion$prediccion <- predicciones
+
+# Graficar los resultados
+plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
+     type = "l", col = "black", 
+     xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
+     main = "Predicción de Tiempos de Respuesta para 2024-2025")
+
+# Línea ajustada para los datos históricos
+lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
+
+# Superponer las predicciones
+lines(fechas_prediccion, predicciones, col = "orange", lwd = 4)
+
+# Guardar el dataframe de predicción como CSV
+write.csv(tabla_prediccion, "tabla_prediccion.csv", row.names = FALSE)
 
 
-# Paso 1: Crear la variable mes_prediccion
-mes_prediccion <- as.integer(format(fechas_prediccion, "%m"))
+# Verificar las fechas de predicción
+print(head(fechas_prediccion))
+print(tail(fechas_prediccion))
 
-# Convertir mes_prediccion en un factor con los mismos niveles que en los datos de entrenamiento
-mes_prediccion <- factor(mes_prediccion, levels = levels(datos_agrupados$MesNumerico))
+# Verificar las predicciones generadas
+print(head(predicciones))
+print(tail(predicciones))
 
-# Paso 2: Crear la tabla de predicción
-tablaPred <- data.frame(
-  tiempo = as.numeric(fechas_prediccion),  # Convertir fechas a numéricas
-  mes = mes_prediccion  # Usar los meses con los niveles correctos
+# Verificar el rango del eje x en el gráfico
+print(range(datos_agrupados$Dia))
+print(range(fechas_prediccion))
+
+plot(  predicciones ~ fechas_prediccion)
+
+# Graficar datos históricos
+plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
+     type = "l", col = "black", 
+     xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
+     main = "Predicción de Tiempos de Respuesta para 2024-2025",
+     xlim = range(c(datos_agrupados$Dia, fechas_prediccion))) # Ajustar rango del eje x
+
+# Añadir línea ajustada para los datos históricos
+lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
+
+# Añadir las predicciones
+lines(fechas_prediccion, predicciones, col = "blue", lwd = 2)
+
+# Graficar datos históricos con rango ajustado
+plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
+     type = "l", col = "black", 
+     xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
+     main = "Predicción de Tiempos de Respuesta para 2024-2025",
+     xlim = range(c(datos_agrupados$Dia, fechas_prediccion)), # Asegurarse de incluir el rango de fechas
+     ylim = range(c(datos_agrupados$tiempo_respuesta_MEDIANA, predicciones))) # Asegurar que los valores predichos entren en el eje Y
+
+# Añadir la línea del modelo ajustado
+lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
+
+# Verificar la alineación de las fechas y las predicciones
+print(length(fechas_prediccion))
+print(length(predicciones))
+
+# Añadir las predicciones al gráfico
+lines(fechas_prediccion, predicciones, col = "blue", lwd = 2)
+
+
+## prediccion
+
+library(ggplot2)
+
+# Crear un data frame combinado con los datos históricos y las predicciones
+datos_historicos <- data.frame(
+  Fecha = datos_agrupados$Dia,
+  TiempoRespuesta = datos_agrupados$tiempo_respuesta_MEDIANA,
+  Tipo = "Histórico"
 )
 
-# Paso 3: Asegurarse de que las variables dummy estén creadas correctamente
-tablaPred <- tablaPred %>%
-  mutate(
-    mes02 = ifelse(mes == 2, 1, 0),
-    mes03 = ifelse(mes == 3, 1, 0),
-    mes04 = ifelse(mes == 4, 1, 0),
-    mes05 = ifelse(mes == 5, 1, 0),
-    mes06 = ifelse(mes == 6, 1, 0),
-    mes07 = ifelse(mes == 7, 1, 0),
-    mes08 = ifelse(mes == 8, 1, 0),
-    mes09 = ifelse(mes == 9, 1, 0),
-    mes10 = ifelse(mes == 10, 1, 0),
-    mes11 = ifelse(mes == 11, 1, 0),
-    mes12 = ifelse(mes == 12, 1, 0)
-  ) %>%
-  select(-mes)  # Eliminar la columna 'mes' ya que ahora tenemos las dummies
+datos_predicciones <- data.frame(
+  Fecha = fechas_prediccion,
+  TiempoRespuesta = predicciones,
+  Tipo = "Predicción"
+)
 
-# Verificar la tabla de predicción y las columnas dummy
-head(tablaPred)
+datos_combinados <- rbind(datos_historicos, datos_predicciones)
 
-# Paso 4: Hacer las predicciones con el modelo
-pred <- predict(mod2, newdata = tablaPred)
+# Graficar con ggplot2
+ggplot(datos_combinados, aes(x = Fecha, y = TiempoRespuesta, color = Tipo)) +
+  geom_line(size = 1) + # Líneas para ambos tipos de datos
+  scale_color_manual(values = c("Histórico" = "black", "Predicción" = "blue")) + # Colores personalizados
+  labs(
+    title = "Predicción de Tiempos de Respuesta para 2024-2025",
+    x = "Fecha",
+    y = "Tiempo de Respuesta (Mediana)"
+  ) +
+  scale_x_date(
+    date_labels = "%Y-%m", # Mostrar años y meses en el eje X
+    date_breaks = "1 month" # Saltos de un mes
+  ) +
+  theme_minimal() + # Tema minimalista
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1), # Rotar etiquetas del eje X
+    plot.title = element_text(hjust = 0.5) # Centrar el título
+  )
 
-# Verificar las primeras predicciones
-head(pred)
+
+library(ggplot2)
+
+# Calcular la mediana de los tiempos históricos
+mediana_historica <- median(datos_agrupados$tiempo_respuesta_MEDIANA)
+
+# Crear un data frame combinado con los datos históricos y las predicciones
+datos_historicos <- data.frame(
+  Fecha = datos_agrupados$Dia,
+  TiempoRespuesta = datos_agrupados$tiempo_respuesta_MEDIANA,
+  Tipo = "Histórico"
+)
+
+datos_predicciones <- data.frame(
+  Fecha = fechas_prediccion,
+  TiempoRespuesta = predicciones,
+  Tipo = "Predicción"
+)
+
+datos_combinados <- rbind(datos_historicos, datos_predicciones)
+
+# Graficar con ggplot2
+ggplot(datos_combinados, aes(x = Fecha, y = TiempoRespuesta, color = Tipo)) +
+  geom_line(size = 1) + # Líneas para datos históricos y predicciones
+  scale_color_manual(values = c("Histórico" = "black", "Predicción" = "blue")) + # Colores personalizados
+  geom_hline(yintercept = mediana_historica, color = "red", linetype = "dashed", size = 1) + # Línea roja para la mediana
+  labs(
+    title = "Predicción de Tiempos de Respuesta para 2024-2025",
+    x = "Fecha",
+    y = "Tiempo de Respuesta (Mediana)"
+  ) +
+  scale_x_date(
+    date_labels = "%Y-%m", # Mostrar años y meses en el eje X
+    date_breaks = "1 month" # Saltos de un mes
+  ) +
+  theme_minimal() + # Tema minimalista
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1), # Rotar etiquetas del eje X
+    plot.title = element_text(hjust = 0.5) # Centrar el título
+  )
 
 
 
-##9. Graficar las predicciones para 2024:
+# Cargar la librería ggplot2
+library(ggplot2)
 
-# Graficar los datos originales
-plot(datos_agrupados$Dia, datos_agrupados$tiempo_respuesta_MEDIANA, type = "l", col = "black", 
-     xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", main = "Predicciones de Tiempo de Respuesta")
+# Convertir fechas a formato Date si no lo están
+datos_agrupados$Dia <- as.Date(datos_agrupados$Dia)
+fechas_prediccion <- as.Date(fechas_prediccion)
 
-# Graficar las predicciones generadas
-lines(fechas_prediccion, pred, col = "blue", lwd = 2)
+# Crear un dataframe para las predicciones
+df_predicciones <- data.frame(
+  Dia = fechas_prediccion,
+  tiempo_respuesta_MEDIANA = predicciones
+)
+
+# Crear el gráfico con ggplot2
+ggplot() +
+  # Datos históricos (línea negra)
+  geom_line(data = datos_agrupados, 
+            aes(x = Dia, y = tiempo_respuesta_MEDIANA), 
+            color = "black") +
+  
+  # Línea roja del modelo ajustado (mediana histórica)
+  geom_line(data = datos_agrupados, 
+            aes(x = Dia, y = mod2$fitted.values), 
+            color = "red", size = 1.2) +
+  
+  # Línea azul de las predicciones
+  geom_line(data = df_predicciones, 
+            aes(x = Dia, y = tiempo_respuesta_MEDIANA), 
+            color = "blue", size = 1.2) +
+  
+  # Personalización de las escalas
+  scale_x_date(
+    date_labels = "%Y-%m", # Etiquetas por año y mes
+    date_breaks = "1 month" # Detalles de las fechas por mes
+  ) +
+  
+  # Etiquetas y título
+  labs(
+    title = "Predicción de Tiempos de Respuesta para 2024-2025",
+    x = "Fecha",
+    y = "Tiempo de Respuesta (Mediana)"
+  ) +
+  
+  # Tema
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1), # Rotar etiquetas del eje X
+    plot.title = element_text(hjust = 0.5, size = 14)  # Centrar título
+  ) +
+  
+  # Agregar una leyenda manual
+  scale_color_manual(
+    values = c("black", "red", "blue"),
+    name = "Leyenda",
+    labels = c("Histórico", "Mediana Ajustada", "Predicción")
+  )
