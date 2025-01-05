@@ -372,7 +372,7 @@ write.csv2(tabla_resumen, "resumen_estadisticas.csv", row.names = FALSE)
 
 
 
-# Supongamos que tu dataframe original se llama "datos"
+# Dataframe original se llama "datos"
 # Convertir la columna fecha a formato de fecha y hora
 datos2 <- datos %>%
   mutate(fecha = as.POSIXct(fecha, format = "%Y-%m-%d %H:%M:%S"))
@@ -498,48 +498,48 @@ predicciones <- predict(mod2, newdata = tabla_prediccion)
 # Agregar las predicciones al dataframe
 tabla_prediccion$prediccion <- predicciones
 
-# Graficar los resultados
-plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
-     type = "l", col = "black", 
-     xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
-     main = "Predicción de Tiempos de Respuesta para 2024-2025")
+# # Graficar los resultados
+# plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
+#      type = "l", col = "black", 
+#      xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
+#      main = "Predicción de Tiempos de Respuesta para 2024-2025")
+# 
+# # Línea ajustada para los datos históricos
+# lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
+# 
+# # Superponer las predicciones
+# lines(fechas_prediccion, predicciones, col = "orange", lwd = 4)
 
-# Línea ajustada para los datos históricos
-lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
+# # Guardar el dataframe de predicción como CSV
+# write.csv(tabla_prediccion, "tabla_prediccion.csv", row.names = FALSE)
+# 
+# 
+# # Verificar las fechas de predicción
+# print(head(fechas_prediccion))
+# print(tail(fechas_prediccion))
+# 
+# # Verificar las predicciones generadas
+# print(head(predicciones))
+# print(tail(predicciones))
+# 
+# # Verificar el rango del eje x en el gráfico
+# print(range(datos_agrupados$Dia))
+# print(range(fechas_prediccion))
+# 
+# plot(  predicciones ~ fechas_prediccion)
 
-# Superponer las predicciones
-lines(fechas_prediccion, predicciones, col = "orange", lwd = 4)
-
-# Guardar el dataframe de predicción como CSV
-write.csv(tabla_prediccion, "tabla_prediccion.csv", row.names = FALSE)
-
-
-# Verificar las fechas de predicción
-print(head(fechas_prediccion))
-print(tail(fechas_prediccion))
-
-# Verificar las predicciones generadas
-print(head(predicciones))
-print(tail(predicciones))
-
-# Verificar el rango del eje x en el gráfico
-print(range(datos_agrupados$Dia))
-print(range(fechas_prediccion))
-
-plot(  predicciones ~ fechas_prediccion)
-
-# Graficar datos históricos
-plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
-     type = "l", col = "black", 
-     xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
-     main = "Predicción de Tiempos de Respuesta para 2024-2025",
-     xlim = range(c(datos_agrupados$Dia, fechas_prediccion))) # Ajustar rango del eje x
-
-# Añadir línea ajustada para los datos históricos
-lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
-
-# Añadir las predicciones
-lines(fechas_prediccion, predicciones, col = "blue", lwd = 2)
+# # Graficar datos históricos
+# plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
+#      type = "l", col = "black", 
+#      xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
+#      main = "Predicción de Tiempos de Respuesta para 2024-2025",
+#      xlim = range(c(datos_agrupados$Dia, fechas_prediccion))) # Ajustar rango del eje x
+# 
+# # Añadir línea ajustada para los datos históricos
+# lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
+# 
+# # Añadir las predicciones
+# lines(fechas_prediccion, predicciones, col = "blue", lwd = 2)
 
 # Graficar datos históricos con rango ajustado
 plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
@@ -553,8 +553,8 @@ plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia,
 lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
 
 # Verificar la alineación de las fechas y las predicciones
-print(length(fechas_prediccion))
-print(length(predicciones))
+# print(length(fechas_prediccion))
+# print(length(predicciones))
 
 # Añadir las predicciones al gráfico
 lines(fechas_prediccion, predicciones, col = "blue", lwd = 2)
@@ -562,6 +562,7 @@ lines(fechas_prediccion, predicciones, col = "blue", lwd = 2)
 
 ## prediccion
 
+#### ejemplo 1
 library(ggplot2)
 
 # Crear un data frame combinado con los datos históricos y las predicciones
@@ -599,49 +600,49 @@ ggplot(datos_combinados, aes(x = Fecha, y = TiempoRespuesta, color = Tipo)) +
   )
 
 
-library(ggplot2)
-
-# Calcular la mediana de los tiempos históricos
-mediana_historica <- median(datos_agrupados$tiempo_respuesta_MEDIANA)
-
-# Crear un data frame combinado con los datos históricos y las predicciones
-datos_historicos <- data.frame(
-  Fecha = datos_agrupados$Dia,
-  TiempoRespuesta = datos_agrupados$tiempo_respuesta_MEDIANA,
-  Tipo = "Histórico"
-)
-
-datos_predicciones <- data.frame(
-  Fecha = fechas_prediccion,
-  TiempoRespuesta = predicciones,
-  Tipo = "Predicción"
-)
-
-datos_combinados <- rbind(datos_historicos, datos_predicciones)
+# library(ggplot2)
+# 
+# # Calcular la mediana de los tiempos históricos
+# mediana_historica <- median(datos_agrupados$tiempo_respuesta_MEDIANA)
+# 
+# # Crear un data frame combinado con los datos históricos y las predicciones
+# datos_historicos <- data.frame(
+#   Fecha = datos_agrupados$Dia,
+#   TiempoRespuesta = datos_agrupados$tiempo_respuesta_MEDIANA,
+#   Tipo = "Histórico"
+# )
+# 
+# datos_predicciones <- data.frame(
+#   Fecha = fechas_prediccion,
+#   TiempoRespuesta = predicciones,
+#   Tipo = "Predicción"
+# )
+# 
+# datos_combinados <- rbind(datos_historicos, datos_predicciones)
 
 # Graficar con ggplot2
-ggplot(datos_combinados, aes(x = Fecha, y = TiempoRespuesta, color = Tipo)) +
-  geom_line(size = 1) + # Líneas para datos históricos y predicciones
-  scale_color_manual(values = c("Histórico" = "black", "Predicción" = "blue")) + # Colores personalizados
-  geom_hline(yintercept = mediana_historica, color = "red", linetype = "dashed", size = 1) + # Línea roja para la mediana
-  labs(
-    title = "Predicción de Tiempos de Respuesta para 2024-2025",
-    x = "Fecha",
-    y = "Tiempo de Respuesta (Mediana)"
-  ) +
-  scale_x_date(
-    date_labels = "%Y-%m", # Mostrar años y meses en el eje X
-    date_breaks = "1 month" # Saltos de un mes
-  ) +
-  theme_minimal() + # Tema minimalista
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1), # Rotar etiquetas del eje X
-    plot.title = element_text(hjust = 0.5) # Centrar el título
-  )
+# ggplot(datos_combinados, aes(x = Fecha, y = TiempoRespuesta, color = Tipo)) +
+#   geom_line(size = 1) + # Líneas para datos históricos y predicciones
+#   scale_color_manual(values = c("Histórico" = "black", "Predicción" = "blue")) + # Colores personalizados
+#   geom_hline(yintercept = mediana_historica, color = "red", linetype = "dashed", size = 1) + # Línea roja para la mediana
+#   labs(
+#     title = "Predicción de Tiempos de Respuesta para 2024-2025",
+#     x = "Fecha",
+#     y = "Tiempo de Respuesta (Mediana)"
+#   ) +
+#   scale_x_date(
+#     date_labels = "%Y-%m", # Mostrar años y meses en el eje X
+#     date_breaks = "1 month" # Saltos de un mes
+#   ) +
+#   theme_minimal() + # Tema minimalista
+#   theme(
+#     axis.text.x = element_text(angle = 45, hjust = 1), # Rotar etiquetas del eje X
+#     plot.title = element_text(hjust = 0.5) # Centrar el título
+#   )
 
 
 
-# Cargar la librería ggplot2
+#### ejemplo 2
 library(ggplot2)
 
 # Convertir fechas a formato Date si no lo están
