@@ -698,3 +698,34 @@ ggplot() +
     name = "Leyenda",
     labels = c("Histórico", "Mediana Ajustada", "Predicción")
   )
+
+
+
+
+
+#Análisis estacional
+
+library(forecast)
+
+# Crear serie de tiempo mensual
+datos_mensuales <- datos %>%
+  mutate(anio_mes = floor_date(fecha, "month")) %>%
+  group_by(anio_mes) %>%
+  summarise(promedio = mean(tiempo_respuesta, na.rm = TRUE))
+
+# Convertir a serie de tiempo
+ts_mensual <- ts(datos_mensuales$promedio, start = c(year(min(datos$fecha)), month(min(datos$fecha))), frequency = 12)
+
+# Descomposición de la serie
+descomposicion <- decompose(ts_mensual)
+
+# Graficar la descomposición
+plot(descomposicion)
+
+# Modelo ARIMA para análisis de patrones estacionales
+modelo_arima <- auto.arima(ts_mensual)
+summary(modelo_arima)
+
+# Predicción
+predicciones <- forecast(modelo_arima, h = 12)  # Predicción para 12 meses
+autoplot(predicciones)
