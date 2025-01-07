@@ -7,7 +7,7 @@ library(ggplot2)
 library(moments)
 
 getwd()
-setwd("d:/dev/estadistica/Taller de investigacion/")
+setwd("c:/dev/estadistica/Taller de investigacion/")
 dir()
 
 datos <- read.csv("tiempos_respuesta.csv", sep=";")
@@ -457,7 +457,7 @@ lines(datos_agrupados$Dia, mod$fitted.values, col = "red", lwd = 2)
 mes <- factor(format(datos_agrupados$Dia, "%m"))
 
 # Ajustar el modelo con 'tiempo' y 'mes' como variables
-mod2 <- lm(tiempo_respuesta_MEDIANA ~ tiempo + mes, data = datos_agrupados)
+mod2 <- lm(tiempo_respuesta_MEDIANA ~ tiempo * mes * Anio, data = datos_agrupados)
 
 # Resumen del modelo con el efecto de los meses
 summary(mod2)
