@@ -412,9 +412,22 @@ datos_agrupados <- datos_transformado %>%
 # Visualizar los primeros registros
 head(datos_agrupados)
 
-# Guardar el dataframe en un archivo CSV con separador de punto y coma
-write.csv(datos_agrupados, "datos_agrupados.csv", row.names = FALSE, sep = ";")
+datos_agrupados <- datos_agrupados %>%
+  mutate(Noviembre = ifelse(MesNumerico == 11, 1, 0),
+         mes = factor(ifelse(MesNumerico == 11, 12, MesNumerico))) # Cambiar noviembre a diciembre
 
+
+# Verificar si se agregó correctamente
+head(datos_agrupados)
+colnames(datos_agrupados)
+
+# Guardar el dataframe en un archivo CSV con separador de punto y coma
+#write.csv(datos_agrupados, "datos_agrupados.csv", row.names = FALSE, sep=";")
+
+# Guardar el dataframe con punto y coma como separador
+write.table(datos_agrupados, "datos_agrupados.csv", row.names = FALSE, sep = ";", dec = ".", quote = TRUE)
+
+#?write.csv
 
 # Verificar los nombres de las columnas en datos_agrupados
 colnames(datos_agrupados)
@@ -457,25 +470,74 @@ lines(datos_agrupados$Dia, mod$fitted.values, col = "red", lwd = 2)
 mes <- factor(format(datos_agrupados$Dia, "%m"))
 
 # Ajustar el modelo con 'tiempo' y 'mes' como variables
-mod2 <- lm(tiempo_respuesta_MEDIANA ~ tiempo * mes * Anio, data = datos_agrupados)
+
+mod2 <- lm(tiempo_respuesta_MEDIANA ~ tiempo * mes * Anio + Noviembre, data = datos_agrupados)
+
+
+# Definir el archivo de salida
+sink("resumen_modelo.txt")
 
 # Resumen del modelo con el efecto de los meses
 summary(mod2)
 
+# Detener la captura de salida
+sink()
+
+
+# Ajustar el modelo de spline
+spline_mod <- smooth.spline(datos_agrupados$Dia, datos_agrupados$tiempo_respuesta_MEDIANA)
+
+sink("spline_mod.txt")
+# Verificar el modelo ajustado
+summary(spline_mod)
+# Detener la captura de salida
+sink()
+
+# Crear el gráfico con ggplot2
+ggplot(datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA)) +
+  geom_line(color = "black") +  # Línea de los datos originales
+  geom_line(aes(x = Dia, y = spline_mod$y), color = "orange", linewidth = 1.2) + # Línea del spline ajustado
+  labs(
+    title = "Tiempo de Respuesta vs Fecha con Spline Ajustado",
+    x = "Fecha", y = "Tiempo de Respuesta (Mediana)"
+  ) +
+  scale_x_date(
+    breaks = "1 month",  # Establecer las marcas cada mes
+    labels = scales::date_format("%b-%Y")  # Formato mes-año
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Incluir rotación de etiquetas
 
 
 ##6
 
-# Graficar los datos originales
-plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
-     type = "l", col = "black", 
-     xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
-     main = "Tiempo de Respuesta vs Fecha con Ajuste")
+# # Graficar los datos originales
+# plot(datos_agrupados$tiempo_respuesta_MEDIANA ~ datos_agrupados$Dia, 
+#      type = "l", col = "black", 
+#      xlab = "Fecha", ylab = "Tiempo de Respuesta (Mediana)", 
+#      main = "Tiempo de Respuesta vs Fecha con Ajuste")
+# 
+# # Añadir la línea ajustada con mod2
+# lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
 
-# Añadir la línea ajustada con mod2
-lines(datos_agrupados$Dia, mod2$fitted.values, col = "red", lwd = 2)
+library(ggplot2)
+
+# Crear el gráfico con ggplot2
+ggplot(datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA)) +
+  geom_line(color = "black") + # Línea de los datos originales
+  geom_line(aes(y = mod2$fitted.values), color = "red", linewidth = 1.2) + # Línea ajustada
+  labs(
+    title = "Tiempo de Respuesta vs Fecha con Ajuste",
+    x = "Fecha", y = "Tiempo de Respuesta (Mediana)"
+  ) +
+  scale_x_date(
+    breaks = "1 month",  # Establecer las marcas cada mes
+    labels = scales::date_format("%b-%Y")  # Formato mes-año
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Incluir rotación de etiquetas
 
 
+
+write.table(datos_agrupados, "datos_agrupados.csv", row.names = FALSE, sep = ";", dec = ".", quote = TRUE)
 
 ## 7 Predicciones para el año 2025
 
