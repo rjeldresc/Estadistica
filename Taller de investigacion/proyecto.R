@@ -793,7 +793,9 @@ ggplot() +
 # autoplot(predicciones)
 
 
-# serie de tiempo 2025-02-07
+
+
+#### serie de tiempo 2025-02-07 ####
 
 # Librerías necesarias
 library(tidyverse)
@@ -832,39 +834,66 @@ autoplot(ts_mensual) +
 adf.test(ts_mensual)
 
 
-# Aplicar primera diferenciación
-ts_mensual_diff <- diff(ts_mensual)
+# Modelo ARIMA sin diferenciación (d=0)
+modelo_arima_d0 <- auto.arima(ts_mensual, d=0)
 
-# Volver a probar la estacionariedad
-adf.test(ts_mensual_diff)
+# Modelo ARIMA con una diferenciación (d=1)
+modelo_arima_d1 <- auto.arima(ts_mensual, d=1)
 
-# Graficar la serie diferenciada
-autoplot(ts_mensual_diff) + 
-  ggtitle("Serie de Tiempo Diferenciada") + 
-  ylab("Cambio en Tiempo de Respuesta (ms)") + 
-  xlab("Fecha")
+# Modelo ARIMA con dos diferenciaciones (d=2)
+modelo_arima_d2 <- auto.arima(ts_mensual, d=2)
 
-# Ajustar un modelo ARIMA automáticamente
-modelo_arima <- auto.arima(ts_mensual)
-summary(modelo_arima)
-
-# Revisar los residuos del modelo
-checkresiduals(modelo_arima)
+# Predicción para 7 meses (diciembre 2024 - junio 2025)
+pred_d0 <- forecast(modelo_arima_d0, h=7)
+pred_d1 <- forecast(modelo_arima_d1, h=7)
+pred_d2 <- forecast(modelo_arima_d2, h=7)
 
 
-# Predicción para los próximos 7 meses
-predicciones <- forecast(modelo_arima, h = 7)
+# Cargar librerías necesarias
+library(ggplot2)
+library(ggrepel)  # Para evitar superposición de etiquetas
 
-# Graficar la predicción con intervalos de confianza
-autoplot(predicciones) + 
-  ggtitle("Predicción de Tiempo de Respuesta (Dic 2024 - Jun 2025)") + 
-  ylab("Tiempo de Respuesta (ms)") + 
-  xlab("Fecha")
+# Crear un dataframe con todas las predicciones
+df_pred <- data.frame(
+  Fecha = seq(from = tail(datos_mensuales$anio_mes, 1) + months(1), length.out = 7, by = "months"),
+  Predicción_d0 = pred_d0$mean,
+  Predicción_d1 = pred_d1$mean,
+  Predicción_d2 = pred_d2$mean
+)
+
+# Convertir fechas a formato Date para mejor visualización
+df_pred$Fecha <- as.Date(df_pred$Fecha)
+# Convertir fechas de datos históricos a formato Date
+datos_mensuales$anio_mes <- as.Date(datos_mensuales$anio_mes)
+
+# Graficar con etiquetas y detalles adicionales
+ggplot() +
+  # Datos históricos
+  geom_line(data = datos_mensuales, aes(x = anio_mes, y = promedio), color = "black", size = 1, linetype = "solid") +
+  
+  # Predicción sin diferenciación (d=0) - Azul
+  geom_line(data = df_pred, aes(x = Fecha, y = Predicción_d0), color = "blue", size = 1, linetype = "dashed") +
+  geom_text_repel(data = df_pred, aes(x = Fecha, y = Predicción_d0, label = round(Predicción_d0, 1)), color = "blue") +
+  
+  # Predicción con d=1 - Roja
+  geom_line(data = df_pred, aes(x = Fecha, y = Predicción_d1), color = "red", size = 1, linetype = "dashed") +
+  geom_text_repel(data = df_pred, aes(x = Fecha, y = Predicción_d1, label = round(Predicción_d1, 1)), color = "red") +
+  
+  # Predicción con d=2 - Verde
+  geom_line(data = df_pred, aes(x = Fecha, y = Predicción_d2), color = "green", size = 1, linetype = "dashed") +
+  geom_text_repel(data = df_pred, aes(x = Fecha, y = Predicción_d2, label = round(Predicción_d2, 1)), color = "green") +
+  
+  # Ajustes del gráfico
+  ggtitle("Comparación de Predicciones con Diferentes Diferenciaciones") +
+  xlab("Fecha") +
+  ylab("Tiempo de Respuesta (ms)") +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b-%Y") +  # Espaciado mensual en eje X
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Inclinación del eje X
+  
+  # Agregar leyenda manualmente
+  annotate("text", x = max(df_pred$Fecha), y = max(df_pred$Predicción_d0), label = "ARIMA d=0", color = "blue", hjust = 1) +
+  annotate("text", x = max(df_pred$Fecha), y = max(df_pred$Predicción_d1), label = "ARIMA d=1", color = "red", hjust = 1) +
+  annotate("text", x = max(df_pred$Fecha), y = min(df_pred$Predicción_d2), label = "ARIMA d=2", color = "green", hjust = 1)
 
 
-modelo_sarima <- auto.arima(ts_mensual, seasonal = TRUE)
-summary(modelo_sarima)
-
-# Predicción con SARIMA
-pred_sarima <- forecast(modelo_sarima, h = 7)
-autoplot(pred_sarima)
