@@ -7,7 +7,7 @@ library(ggplot2)
 library(moments)
 
 getwd()
-setwd("c:/dev/estadistica/Taller de investigacion/")
+setwd("d:/dev/estadistica/Taller de investigacion/")
 dir()
 
 datos <- read.csv("tiempos_respuesta.csv", sep=";")
@@ -471,11 +471,11 @@ mes <- factor(format(datos_agrupados$Dia, "%m"))
 
 # Ajustar el modelo con 'tiempo' y 'mes' como variables
 
-mod2 <- lm(tiempo_respuesta_MEDIANA ~ tiempo * mes * Anio + Noviembre, data = datos_agrupados)
+mod2 <- lm(tiempo_respuesta_MEDIANA ~ (tiempo * mes * Anio) * Noviembre, data = datos_agrupados)
 
 
 # Definir el archivo de salida
-sink("resumen_modelo.txt")
+sink("resumen_modelo_mod2.txt")
 
 # Resumen del modelo con el efecto de los meses
 summary(mod2)
@@ -521,7 +521,7 @@ ggplot(datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA)) +
 
 library(ggplot2)
 
-# Crear el gráfico con ggplot2
+# Crear el gráfico con ggplot2 para el "mod2"
 ggplot(datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA)) +
   geom_line(color = "black") + # Línea de los datos originales
   geom_line(aes(y = mod2$fitted.values), color = "red", linewidth = 1.2) + # Línea ajustada
@@ -767,9 +767,50 @@ ggplot() +
 
 #Análisis estacional
 
-library(forecast)
+# library(forecast)
+# 
+# # Crear serie de tiempo mensual
+# datos_mensuales <- datos %>%
+#   mutate(anio_mes = floor_date(fecha, "month")) %>%
+#   group_by(anio_mes) %>%
+#   summarise(promedio = mean(tiempo_respuesta, na.rm = TRUE))
+# 
+# # Convertir a serie de tiempo
+# ts_mensual <- ts(datos_mensuales$promedio, start = c(year(min(datos$fecha)), month(min(datos$fecha))), frequency = 12)
+# 
+# # Descomposición de la serie
+# descomposicion <- decompose(ts_mensual)
+# 
+# # Graficar la descomposición
+# plot(descomposicion)
+# 
+# # Modelo ARIMA para análisis de patrones estacionales
+# modelo_arima <- auto.arima(ts_mensual)
+# summary(modelo_arima)
+# 
+# # Predicción
+# predicciones <- forecast(modelo_arima, h = 12)  # Predicción para 12 meses
+# autoplot(predicciones)
 
-# Crear serie de tiempo mensual
+
+# serie de tiempo 2025-02-07
+
+# Librerías necesarias
+library(tidyverse)
+library(lubridate)
+library(forecast)
+library(tseries)
+
+# Establecer directorio de trabajo (ajústalo según corresponda)
+setwd("d:/dev/estadistica/Taller de investigacion/")
+
+# Cargar los datos
+datos <- read.csv("tiempos_respuesta.csv", sep=";")
+
+# Convertir la columna de fecha a formato de fecha y hora
+datos$fecha <- ymd_hms(datos$fecha)
+
+# Agregar datos por mes y calcular el promedio del tiempo de respuesta
 datos_mensuales <- datos %>%
   mutate(anio_mes = floor_date(fecha, "month")) %>%
   group_by(anio_mes) %>%
@@ -778,16 +819,52 @@ datos_mensuales <- datos %>%
 # Convertir a serie de tiempo
 ts_mensual <- ts(datos_mensuales$promedio, start = c(year(min(datos$fecha)), month(min(datos$fecha))), frequency = 12)
 
-# Descomposición de la serie
-descomposicion <- decompose(ts_mensual)
+# Visualizar los primeros datos
+head(ts_mensual)
 
-# Graficar la descomposición
-plot(descomposicion)
+# Graficar la serie de tiempo original
+autoplot(ts_mensual) + 
+  ggtitle("Evolución Mensual del Tiempo de Respuesta") + 
+  ylab("Tiempo de Respuesta (ms)") + 
+  xlab("Fecha")
 
-# Modelo ARIMA para análisis de patrones estacionales
+# Prueba de Dickey-Fuller aumentada (ADF)
+adf.test(ts_mensual)
+
+
+# Aplicar primera diferenciación
+ts_mensual_diff <- diff(ts_mensual)
+
+# Volver a probar la estacionariedad
+adf.test(ts_mensual_diff)
+
+# Graficar la serie diferenciada
+autoplot(ts_mensual_diff) + 
+  ggtitle("Serie de Tiempo Diferenciada") + 
+  ylab("Cambio en Tiempo de Respuesta (ms)") + 
+  xlab("Fecha")
+
+# Ajustar un modelo ARIMA automáticamente
 modelo_arima <- auto.arima(ts_mensual)
 summary(modelo_arima)
 
-# Predicción
-predicciones <- forecast(modelo_arima, h = 12)  # Predicción para 12 meses
-autoplot(predicciones)
+# Revisar los residuos del modelo
+checkresiduals(modelo_arima)
+
+
+# Predicción para los próximos 7 meses
+predicciones <- forecast(modelo_arima, h = 7)
+
+# Graficar la predicción con intervalos de confianza
+autoplot(predicciones) + 
+  ggtitle("Predicción de Tiempo de Respuesta (Dic 2024 - Jun 2025)") + 
+  ylab("Tiempo de Respuesta (ms)") + 
+  xlab("Fecha")
+
+
+modelo_sarima <- auto.arima(ts_mensual, seasonal = TRUE)
+summary(modelo_sarima)
+
+# Predicción con SARIMA
+pred_sarima <- forecast(modelo_sarima, h = 7)
+autoplot(pred_sarima)
