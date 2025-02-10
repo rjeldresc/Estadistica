@@ -13,6 +13,9 @@ dir()
 datos <- read.csv("tiempos_respuesta.csv", sep=";")
 
 datos$fecha <- ymd_hms(datos$fecha)
+summary(datos$tiempo_respuesta)  # Ver valores mínimos, medianos y máximos
+boxplot(datos$tiempo_respuesta)  # Ver si hay valores atípicos
+hist(datos$tiempo_respuesta, breaks = 30)  # Ver la distribución
 
 datos_diarios <- datos %>%
   group_by(fecha = as.Date(fecha)) %>%
@@ -895,5 +898,456 @@ ggplot() +
   annotate("text", x = max(df_pred$Fecha), y = max(df_pred$Predicción_d0), label = "ARIMA d=0", color = "blue", hjust = 1) +
   annotate("text", x = max(df_pred$Fecha), y = max(df_pred$Predicción_d1), label = "ARIMA d=1", color = "red", hjust = 1) +
   annotate("text", x = max(df_pred$Fecha), y = min(df_pred$Predicción_d2), label = "ARIMA d=2", color = "green", hjust = 1)
+
+
+# Cargar funciones adicionales
+source("summary.arima.R")
+source("TS.diag.R")
+
+ts_mensual_diff2 <- diff(ts_mensual, differences=2)
+adf.test(ts_mensual_diff2)
+#p-valor = 0.01254  serie con 2 diferenciaciones es estacionaria
+
+
+# modelo_arima <- auto.arima(ts_mensual, d=2)
+# summary(modelo_arima)
+# modelo_arima$coef
+
+modelo_arima <- Arima(ts_mensual, order = c(1,2,1))
+summary(modelo_arima)
+modelo_arima$coef
+
+# modelo_arima <- Arima(ts_mensual, order = c(1,1,1))
+# summary(modelo_arima)
+# modelo_arima$coef
+
+#Resumen del modelo con detalles de coeficientes y errores estándar
+summary_arima(modelo_arima, fixed = rep(NA, length(modelo_arima$coef)))
+
+#Prueba de blancura (Box-Ljung Test) para validar residuos
+Box.Ljung.Test(modelo_arima$residuals, lag = 12)
+
+#Diagnóstico de residuos (Autocorrelación, normalidad, histograma, etc.)
+#TS.diag(modelo_arima$residuals, lag = 12)
+#TS.diag(modelo_arima, lag = 12)
+
+tsdiag(modelo_arima, gof.lag = 12)
+
+#Validación de normalidad y homocedasticidad
+ks.test(scale(modelo_arima$residuals), "pnorm")  # Normalidad
+lmtest::bptest(lm(modelo_arima$residuals ~ time(modelo_arima$residuals)))  # Homocedasticidad
+
+
+#Aplicar Transformación Box-Cox para normalizar residuos
+lambda <- BoxCox.lambda(ts_mensual)  # Calcular parámetro de transformación
+ts_bc <- BoxCox(ts_mensual, lambda)  # Aplicar transformación
+
+# Ajustar modelo con datos transformados
+modelo_bc <- auto.arima(ts_bc, d=2)
+summary(modelo_bc)
+
+# Validar normalidad en residuos del nuevo modelo
+ks.test(scale(modelo_bc$residuals), "pnorm")
+
+
+#### modelo_final ####
+modelo_final <- Arima(ts_mensual, order = c(1,2,1))
+summary(modelo_final)
+modelo_final$coef
+ks.test(scale(modelo_final$residuals), "pnorm")  # Normalidad
+lmtest::bptest(lm(modelo_final$residuals ~ time(modelo_final$residuals)))  # Homocedasticidad
+
+pred_final <- forecast(modelo_final, h = 7)
+
+autoplot(pred_final) + 
+  ggtitle("Predicción de Tiempo de Respuesta (Dic 2024 - Jun 2025)") + 
+  ylab("Tiempo de Respuesta (ms)") + 
+  xlab("Fecha")
+
+
+
+#### final final serie de tiempo ####
+
+
+# Cargar librerías necesarias
+library(tidyverse)
+library(lubridate)
+library(forecast)
+library(tseries)
+library(lmtest)
+library(ggplot2)
+library(ggrepel)
+
+# Cargar las funciones del profesor
+source("summary.arima.R")
+source("TS.diag.R")
+
+# Establecer directorio de trabajo
+setwd("d:/dev/estadistica/Taller de investigacion/")
+
+# Cargar los datos
+datos <- read.csv("tiempos_respuesta.csv", sep=";")
+
+# Convertir la columna de fecha a formato Date
+datos$fecha <- ymd_hms(datos$fecha)
+
+# Agregar datos por mes y calcular el promedio del tiempo de respuesta
+datos_mensuales <- datos %>%
+  mutate(anio_mes = floor_date(fecha, "month")) %>%
+  group_by(anio_mes) %>%
+  summarise(promedio = mean(tiempo_respuesta, na.rm = TRUE))
+
+# Convertir a serie de tiempo
+ts_mensual <- ts(datos_mensuales$promedio, start = c(year(min(datos$fecha)), month(min(datos$fecha))), frequency = 12)
+
+# Graficar la serie de tiempo original
+autoplot(ts_mensual) + 
+  ggtitle("Evolución Mensual del Tiempo de Respuesta") + 
+  ylab("Tiempo de Respuesta (ms)") + 
+  xlab("Fecha")
+
+# Prueba de Dickey-Fuller Aumentada (ADF)
+adf.test(ts_mensual)
+
+# Aplicar primera diferenciación
+ts_mensual_diff <- diff(ts_mensual)
+
+# Prueba ADF después de la primera diferenciación
+adf.test(ts_mensual_diff)
+
+# Aplicar segunda diferenciación
+ts_mensual_diff2 <- diff(ts_mensual_diff)
+
+# Prueba ADF después de la segunda diferenciación
+adf.test(ts_mensual_diff2)
+
+# Ajustar modelo ARIMA(1,2,1)
+modelo_final <- Arima(ts_mensual, order = c(1,2,1))
+
+# Ver resumen del modelo con la función personalizada del profesor
+summary_arima(modelo_final, fixed = rep(NA, length(modelo_final$coef)))
+
+# Diagnóstico de residuos usando la función TS.diag del profesor
+TS.diag(modelo_final, lag = 12)
+
+tsdiag(modelo_final, lag = 12)
+
+# Prueba de Box-Ljung para confirmar blancura de residuos
+Box.Ljung.Test(modelo_final$residuals, lag = 12)
+
+# Prueba de Normalidad
+ks.test(scale(modelo_final$residuals), "pnorm")
+
+# Prueba de Homocedasticidad
+lmtest::bptest(lm(modelo_final$residuals ~ time(modelo_final$residuals)))
+
+# 📌 Cargar librerías necesarias
+library(tidyverse)
+library(lubridate)
+library(forecast)
+library(tseries)
+library(lmtest)
+library(ggplot2)
+library(ggrepel)
+
+# 📌 Establecer directorio de trabajo
+setwd("d:/dev/estadistica/Taller de investigacion/")
+
+# 📌 Cargar los datos
+datos <- read.csv("tiempos_respuesta.csv", sep=";")
+
+# 📌 Convertir la columna de fecha a formato Date
+datos$fecha <- ymd_hms(datos$fecha)
+
+# 📌 Agregar datos por mes y calcular el promedio del tiempo de respuesta
+datos_mensuales <- datos %>%
+  mutate(anio_mes = floor_date(fecha, "month")) %>%
+  group_by(anio_mes) %>%
+  summarise(promedio = mean(tiempo_respuesta, na.rm = TRUE))
+
+# 📌 Verificar los últimos registros
+tail(datos_mensuales, 2)  # Se asegura de que noviembre 2024 está en la serie con su valor de 143 ms
+
+# 📌 Convertir a serie de tiempo
+ts_mensual <- ts(datos_mensuales$promedio, start = c(year(min(datos$fecha)), month(min(datos$fecha))), frequency = 12)
+
+# 📌 Ajustar el modelo ARIMA(1,2,1)
+modelo_final <- Arima(ts_mensual, order = c(1,2,1))
+
+# 📌 Generar predicción para los próximos 7 meses
+pred_final <- forecast(modelo_final, h = 7)
+
+# 📌 Generar fechas correctas para la predicción
+df_pred <- data.frame(
+  Fecha = seq(from = as.Date(max(datos_mensuales$anio_mes)) %m+% months(1), 
+              by = "month", length.out = 7),
+  Predicción = as.numeric(pred_final$mean),
+  LI_80 = as.numeric(pred_final$lower[,1]),
+  LS_80 = as.numeric(pred_final$upper[,1]),
+  LI_95 = as.numeric(pred_final$lower[,2]),
+  LS_95 = as.numeric(pred_final$upper[,2])
+)
+
+# 📌 Última fila para etiquetar los intervalos de confianza en junio 2025
+df_ultimo <- df_pred %>% tail(1)
+
+# 📌 Gráfico Mejorado
+ggplot() +
+  # 📌 Datos históricos
+  geom_line(data = datos_mensuales, aes(x = as.Date(anio_mes), y = promedio), color = "black", size = 1) +
+  
+  # 📌 Intervalo de confianza 95%
+  geom_ribbon(data = df_pred, aes(x = Fecha, ymin = LI_95, ymax = LS_95), fill = "lightblue", alpha = 0.4) +
+  
+  # 📌 Intervalo de confianza 80%
+  geom_ribbon(data = df_pred, aes(x = Fecha, ymin = LI_80, ymax = LS_80), fill = "blue", alpha = 0.4) +
+  
+  # 📌 Línea de predicción
+  geom_line(data = df_pred, aes(x = Fecha, y = Predicción), color = "blue", size = 1) +
+  
+  # 📌 Agregar etiquetas para la predicción final en junio 2025
+  geom_text_repel(data = df_ultimo, aes(x = Fecha, y = Predicción, label = round(Predicción, 1)), 
+                  color = "blue", size = 5, fontface = "bold", nudge_y = 5) +
+  
+  geom_text_repel(data = df_ultimo, aes(x = Fecha, y = LS_80, label = round(LS_80, 1)), 
+                  color = "darkblue", size = 4, fontface = "italic", nudge_y = 5) +
+  
+  geom_text_repel(data = df_ultimo, aes(x = Fecha, y = LI_80, label = round(LI_80, 1)), 
+                  color = "darkblue", size = 4, fontface = "italic", nudge_y = -5) +
+  
+  geom_text_repel(data = df_ultimo, aes(x = Fecha, y = LS_95, label = round(LS_95, 1)), 
+                  color = "darkblue", size = 4, fontface = "italic", nudge_y = 5) +
+  
+  geom_text_repel(data = df_ultimo, aes(x = Fecha, y = LI_95, label = round(LI_95, 1)), 
+                  color = "darkblue", size = 4, fontface = "italic", nudge_y = -5) +
+  
+  # 📌 Ajustes del gráfico
+  ggtitle("Predicción del Tiempo de Respuesta (Dic 2024 - Jun 2025)") +
+  xlab("Tiempo") +
+  ylab("Tiempo de Respuesta (ms)") +
+  
+  # 📌 Ajuste de eje X para mostrar meses correctamente
+  scale_x_date(date_breaks = "1 month", date_labels = "%b-%Y") +
+  
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+#### grafico comparacion con diferenciaciones ####
+
+# Cargar librerías necesarias
+library(ggplot2)
+library(ggrepel)
+library(dplyr)
+library(forecast)
+library(lubridate)
+
+# 📌 Ajustar modelos ARIMA con diferentes diferenciaciones
+modelo_d0 <- auto.arima(ts_mensual, d=0, seasonal = FALSE)
+modelo_d1 <- auto.arima(ts_mensual, d=1, seasonal = FALSE)
+modelo_d2 <- auto.arima(ts_mensual, d=2, seasonal = FALSE)
+
+# 📌 Generar predicciones para cada modelo
+pred_d0 <- forecast(modelo_d0, h = 7)
+pred_d1 <- forecast(modelo_d1, h = 7)
+pred_d2 <- forecast(modelo_d2, h = 7)
+
+# 📌 Generar las fechas de predicción correctas
+fechas_pred <- seq(from = as.Date(max(datos_mensuales$anio_mes)) %m+% months(1), 
+                   by = "month", length.out = 7)
+
+# 📌 Crear un dataframe con todas las predicciones y agregar una columna "Modelo"
+df_pred <- bind_rows(
+  data.frame(Fecha = fechas_pred, Predicción = as.numeric(pred_d0$mean), Modelo = "ARIMA d=0"),
+  data.frame(Fecha = fechas_pred, Predicción = as.numeric(pred_d1$mean), Modelo = "ARIMA d=1"),
+  data.frame(Fecha = fechas_pred, Predicción = as.numeric(pred_d2$mean), Modelo = "ARIMA d=2")
+)
+
+# 📌 Definir los colores y estilos de línea por modelo
+colores <- c("ARIMA d=0" = "blue", "ARIMA d=1" = "red", "ARIMA d=2" = "green")
+lineas <- c("ARIMA d=0" = "dashed", "ARIMA d=1" = "dashed", "ARIMA d=2" = "dashed")
+
+# 📌 Gráfico mejorado con leyenda corregida
+ggplot() +
+  # 📌 Datos históricos
+  geom_line(data = datos_mensuales, aes(x = as.Date(anio_mes), y = promedio), 
+            color = "black", size = 1) +
+  
+  # 📌 Predicciones con leyenda corregida
+  geom_line(data = df_pred, aes(x = Fecha, y = Predicción, color = Modelo, linetype = Modelo), size = 1.2) +
+  
+  # 📌 Etiquetas para cada modelo
+  geom_text_repel(data = df_pred, aes(x = Fecha, y = Predicción, label = round(Predicción, 1), color = Modelo),
+                  size = 5, fontface = "bold") +
+  
+  # 📌 Ajustes del gráfico
+  ggtitle("Comparación de Predicciones con Diferentes Diferenciaciones") +
+  xlab("Fecha") +
+  ylab("Tiempo de Respuesta (ms)") +
+  
+  # 📌 Ajuste de colores y estilos en la leyenda
+  scale_color_manual(name = "Modelos ARIMA", values = colores) +
+  scale_linetype_manual(name = "Modelos ARIMA", values = lineas) +
+  
+  # 📌 Corregir la leyenda para que los colores aparezcan correctamente
+  guides(color = guide_legend(override.aes = list(linetype = "solid", size = 2)), 
+         linetype = guide_legend(override.aes = list(size = 1.2))) +
+  
+  # 📌 Ajuste del eje X para mostrar meses claramente
+  scale_x_date(date_breaks = "1 month", date_labels = "%b-%Y") +
+  
+  # 📌 Ajustes de tema para mejorar la claridad
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom",  # Mueve la leyenda abajo del gráfico
+        legend.title = element_text(size = 12, face = "bold"),  # Agranda el título de la leyenda
+        legend.text = element_text(size = 11),  # Agranda los textos de la leyenda
+        legend.background = element_rect(fill = "white", color = "black"))  # Fondo blanco para la leyenda
+
+
+#### serie de tiempo usando la mediana ####
+
+# 📌 Cargar librerías necesarias
+library(tidyverse)
+library(lubridate)
+library(forecast)
+library(tseries)
+library(lmtest)
+library(ggplot2)
+library(ggrepel)
+
+# 📌 Cargar bibliotecas del profesor
+source("summary.arima.R")
+source("TS.diag.R")
+
+# 📌 Establecer directorio de trabajo
+setwd("d:/dev/estadistica/Taller de investigacion/")
+
+# 📌 Cargar los datos
+datos <- read.csv("tiempos_respuesta.csv", sep=";")
+
+# 📌 Convertir la columna de fecha a formato Date
+datos$fecha <- ymd_hms(datos$fecha)
+
+# 📌 Agregar datos por mes usando la MEDIANA en lugar del promedio
+datos_mensuales_mediana <- datos %>%
+  mutate(anio_mes = floor_date(fecha, "month")) %>%
+  group_by(anio_mes) %>%
+  summarise(mediana = median(tiempo_respuesta, na.rm = TRUE))  # Usar mediana
+
+# 📌 Crear la serie de tiempo mensual basada en la MEDIANA
+ts_mensual_mediana <- ts(datos_mensuales_mediana$mediana, 
+                         start = c(year(min(datos$fecha)), month(min(datos$fecha))), 
+                         frequency = 12)
+
+# 📌 Verificar estacionariedad con la prueba de Dickey-Fuller Aumentada (ADF)
+adf_test_result <- adf.test(ts_mensual_mediana)
+print(adf_test_result)  # Si p-value > 0.05, se necesita diferenciación
+
+# 📌 Aplicar diferenciaciones hasta lograr estacionariedad
+ts_mensual_diff1 <- diff(ts_mensual_mediana)
+adf_test_diff1 <- adf.test(ts_mensual_diff1)
+
+ts_mensual_diff2 <- diff(ts_mensual_diff1)
+adf_test_diff2 <- adf.test(ts_mensual_diff2)
+
+# 📌 Ajustar el modelo ARIMA con los parámetros correctos (según la prueba ADF)
+modelo_mediana <- Arima(ts_mensual_mediana, order = c(1,2,1))
+
+# 📌 Resumen del modelo ARIMA
+summary(modelo_mediana)
+
+# 📌 Análisis de residuos
+tsdiag(modelo_mediana)  # Diagnóstico general
+ks.test(scale(modelo_mediana$residuals), "pnorm")  # Prueba de normalidad
+lmtest::bptest(lm(modelo_mediana$residuals ~ time(modelo_mediana$residuals)))  # Prueba de homocedasticidad
+
+# 📌 Ajustar los residuos a la misma frecuencia de la serie original
+#residuos_mediana <- ts(modelo_mediana$residuals, frequency = 12)
+
+# 📌 Aplicar la prueba de blancura corregida
+#TS.diag(residuos_mediana, lag = 12)
+
+
+# 📌 Aplicar la prueba de blancura del profesor
+#TS.diag(modelo_mediana$residuals, lag = 12)
+
+# 📌 Generar predicción para los próximos 7 meses
+pred_mediana <- forecast(modelo_mediana, h = 7)
+
+# 📌 Crear dataframe con las predicciones
+df_pred_mediana <- data.frame(
+  Fecha = seq(from = as.Date(max(datos_mensuales_mediana$anio_mes)) %m+% months(1), 
+              by = "month", length.out = 7),
+  Predicción = as.numeric(pred_mediana$mean),
+  LI_80 = as.numeric(pred_mediana$lower[,1]),
+  LS_80 = as.numeric(pred_mediana$upper[,1]),
+  LI_95 = as.numeric(pred_mediana$lower[,2]),
+  LS_95 = as.numeric(pred_mediana$upper[,2])
+)
+
+ggplot() +
+  # 📌 Datos históricos
+  geom_line(data = datos_mensuales_mediana, aes(x = as.Date(anio_mes), y = mediana), 
+            color = "black", size = 1) +
+  
+  # 📌 Intervalos de confianza
+  geom_ribbon(data = df_pred_mediana, aes(x = Fecha, ymin = LI_95, ymax = LS_95), 
+              fill = "lightblue", alpha = 0.4) +
+  geom_ribbon(data = df_pred_mediana, aes(x = Fecha, ymin = LI_80, ymax = LS_80), 
+              fill = "blue", alpha = 0.4) +
+  
+  # 📌 Predicción central
+  geom_line(data = df_pred_mediana, aes(x = Fecha, y = Predicción), 
+            color = "blue", size = 1) +
+  
+  # 📌 Etiquetas para la predicción central
+  geom_text_repel(data = df_pred_mediana, aes(x = Fecha, y = Predicción, 
+                                              label = round(Predicción, 1)), 
+                  color = "blue", size = 5, fontface = "bold", nudge_y = 3) +
+  
+  # 📌 Etiquetas para el peor escenario (LI_95) - en rojo
+  geom_text_repel(data = df_pred_mediana, aes(x = Fecha, y = LI_95, 
+                                              label = round(LI_95, 1)), 
+                  color = "red", size = 5, fontface = "bold", nudge_y = -5) +
+  
+  # 📌 Etiquetas para el mejor escenario (LS_95) - en verde oscuro y negrita
+  geom_text_repel(data = df_pred_mediana, aes(x = Fecha, y = LS_95, 
+                                              label = round(LS_95, 1)), 
+                  color = "darkgreen", size = 5, fontface = "bold", nudge_y = 5) +
+  
+  # 📌 Títulos y etiquetas
+  ggtitle("Predicción del Tiempo de Respuesta con Mediana y Escenarios (Dic 2024 - Jun 2025)") +
+  xlab("Tiempo") +
+  ylab("Tiempo de Respuesta (ms)") +
+  
+  # 📌 Ajuste del eje X
+  scale_x_date(date_breaks = "1 month", date_labels = "%b-%Y") +
+  
+  # 📌 Mejorar la visibilidad
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+# 📌 Crear DataFrame con los intervalos de confianza y la predicción central
+df_pred_mediana <- data.frame(
+  Fecha = seq(from = as.Date("2024-12-01"), by = "month", length.out = 7),  # Fechas de predicción
+  Predicción_Central = pred_mediana$mean,  # Predicción central
+  LI_80 = pred_mediana$lower[,1],  # Intervalo de confianza al 80% (línea inferior)
+  LS_80 = pred_mediana$upper[,1],  # Intervalo de confianza al 80% (línea superior)
+  LI_95 = pred_mediana$lower[,2],  # Intervalo de confianza al 95% (línea inferior)
+  LS_95 = pred_mediana$upper[,2]   # Intervalo de confianza al 95% (línea superior)
+)
+
+# 📌 Imprimir tabla en consola
+print(df_pred_mediana)
+
+# 📌 Si quieres exportarla a un archivo CSV:
+write.csv(df_pred_mediana, "predicciones_intervalos.csv", row.names = FALSE)
+
+
+
+#### spline ####
 
 
