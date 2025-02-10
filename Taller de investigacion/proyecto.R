@@ -1400,7 +1400,7 @@ datos_agrupados <- datos_agrupados %>%
   )
 
 # 📌 Ajustar el modelo de spline con mayor precisión
-spline_mod <- smooth.spline(datos_agrupados$tiempo, datos_agrupados$tiempo_respuesta_MEDIANA, spar = NULL)
+spline_mod <- smooth.spline(datos_agrupados$tiempo, datos_agrupados$tiempo_respuesta_MEDIANA, spar = 0.3)
 
 # 📌 Guardar el resumen del modelo spline
 sink("spline_mod_resumen.txt")
@@ -1427,5 +1427,168 @@ ggplot(datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA)) +
   ) +
   
   # 📌 Mejorar visibilidad
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# 📌 Definir el período de predicción
+#fechas_futuras <- seq(from = max(datos_agrupados$Dia) + 1, 
+#                      to = as.Date("2025-06-30"), by = "day")
+
+# 📌 Definir el período de predicción asegurando solo meses completos
+fechas_futuras <- seq(from = as.Date("2024-12-01"), 
+                      to = as.Date("2025-06-30"), by = "month")
+
+# 📌 Convertir fechas futuras a valores numéricos como en el spline original
+tiempo_futuro <- as.numeric(fechas_futuras - min(datos_agrupados$Dia))
+
+# 📌 Generar predicción usando el modelo spline ajustado
+predicciones_spline <- predict(spline_mod, tiempo_futuro)$y
+
+# 📌 Crear dataframe con las predicciones
+df_pred_spline <- data.frame(
+  Fecha = fechas_futuras,
+  Predicción = predicciones_spline
+)
+
+# 📌 Generar gráfico con predicción del spline
+ggplot() +
+  # 📌 Datos históricos
+  geom_line(data = datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA), 
+            color = "black", size = 1) +
+  
+  # 📌 Línea del spline ajustado sobre datos históricos
+  geom_line(aes(x = datos_agrupados$Dia, y = predict(spline_mod)$y), 
+            color = "orange", size = 1.2) +
+  
+  # 📌 Línea de predicción spline
+  geom_line(data = df_pred_spline, aes(x = Fecha, y = Predicción), 
+            color = "blue", size = 1.5, linetype = "dashed") +
+  
+  # 📌 Etiquetas de predicción en junio 2025
+  geom_text_repel(data = df_pred_spline[df_pred_spline$Fecha == "2025-06-30", ], 
+                  aes(x = Fecha, y = Predicción, label = round(Predicción, 1)), 
+                  color = "blue", size = 5, fontface = "bold") +
+  
+  # 📌 Títulos y etiquetas
+  labs(
+    title = "Predicción del Tiempo de Respuesta con Spline (Dic 2024 - Jun 2025)",
+    x = "Fecha", y = "Tiempo de Respuesta (Mediana)"
+  ) +
+  
+  # 📌 Ajuste del eje X
+  scale_x_date(
+    breaks = "1 month", 
+    labels = scales::date_format("%b-%Y")
+  ) +
+  
+  # 📌 Mejorar visibilidad
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+library(boot)
+
+# 📌 Función para ajustar un spline a una muestra de datos
+bootstrap_spline <- function(data, indices) {
+  datos_sample <- data[indices, ]
+  modelo_spline <- smooth.spline(datos_sample$tiempo, datos_sample$tiempo_respuesta_MEDIANA, spar = 0.3)
+  predict(modelo_spline, tiempo_futuro)$y
+}
+
+# 📌 Aplicar bootstrapping con 1000 iteraciones
+set.seed(123)
+boot_spline <- boot(data = datos_agrupados, statistic = bootstrap_spline, R = 1000)
+
+# 📌 Obtener los intervalos de confianza
+pred_ic_lower <- apply(boot_spline$t, 2, quantile, probs = 0.025) # Límite inferior (2.5%)
+pred_ic_upper <- apply(boot_spline$t, 2, quantile, probs = 0.975) # Límite superior (97.5%)
+
+# 📌 Crear dataframe con las predicciones y los intervalos
+df_pred_spline_ic <- data.frame(
+  Fecha = fechas_futuras,
+  Predicción = predicciones_spline,
+  LI = pred_ic_lower,  # Límite inferior
+  LS = pred_ic_upper   # Límite superior
+)
+
+# 📌 Graficar con intervalos de confianza
+ggplot() +
+  geom_line(data = datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA), 
+            color = "black", size = 1) +
+  
+  geom_line(aes(x = datos_agrupados$Dia, y = predict(spline_mod)$y), 
+            color = "orange", size = 1.2) +
+  
+  geom_line(data = df_pred_spline_ic, aes(x = Fecha, y = Predicción), 
+            color = "blue", size = 1.5, linetype = "dashed") +
+  
+  geom_ribbon(data = df_pred_spline_ic, aes(x = Fecha, ymin = LI, ymax = LS), 
+              fill = "blue", alpha = 0.2) +  # Intervalos de confianza
+  
+  geom_text_repel(data = df_pred_spline_ic[df_pred_spline_ic$Fecha == "2025-06-30", ], 
+                  aes(x = Fecha, y = Predicción, label = round(Predicción, 1)), 
+                  color = "blue", size = 5, fontface = "bold") +
+  
+  geom_text_repel(data = df_pred_spline_ic[df_pred_spline_ic$Fecha == "2025-06-30", ], 
+                  aes(x = Fecha, y = LI, label = round(LI, 1)), 
+                  color = "darkgreen", size = 4, fontface = "bold") +
+  
+  geom_text_repel(data = df_pred_spline_ic[df_pred_spline_ic$Fecha == "2025-06-30", ], 
+                  aes(x = Fecha, y = LS, label = round(LS, 1)), 
+                  color = "darkred", size = 4, fontface = "bold") +
+  
+  labs(
+    title = "Predicción del Tiempo de Respuesta con Spline e Intervalos de Confianza",
+    x = "Fecha", y = "Tiempo de Respuesta (Mediana)"
+  ) +
+  
+  scale_x_date(
+    breaks = "1 month", 
+    labels = scales::date_format("%b-%Y")
+  ) +
+  
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+library(ggrepel)
+
+# 📌 Graficar con intervalos de confianza y etiquetas en cada mes de la predicción
+ggplot() +
+  geom_line(data = datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA), 
+            color = "black", size = 1) +
+  
+  geom_line(aes(x = datos_agrupados$Dia, y = predict(spline_mod)$y), 
+            color = "orange", size = 1.2) +
+  
+  geom_line(data = df_pred_spline_ic, aes(x = Fecha, y = Predicción), 
+            color = "blue", size = 1.5, linetype = "dashed") +
+  
+  geom_ribbon(data = df_pred_spline_ic, aes(x = Fecha, ymin = LI, ymax = LS), 
+              fill = "blue", alpha = 0.2) +  # Intervalos de confianza
+  
+  # 📌 Etiquetas en todos los meses de la predicción
+  geom_text_repel(data = df_pred_spline_ic, 
+                  aes(x = Fecha, y = Predicción, label = round(Predicción, 1)), 
+                  color = "blue", size = 5, fontface = "bold") +
+  
+  geom_text_repel(data = df_pred_spline_ic, 
+                  aes(x = Fecha, y = LI, label = round(LI, 1)), 
+                  color = "darkgreen", size = 4, fontface = "bold") +
+  
+  geom_text_repel(data = df_pred_spline_ic, 
+                  aes(x = Fecha, y = LS, label = round(LS, 1)), 
+                  color = "darkred", size = 4, fontface = "bold") +
+  
+  labs(
+    title = "Predicción del Tiempo de Respuesta con Spline e Intervalos de Confianza",
+    x = "Fecha", y = "Tiempo de Respuesta (Mediana)"
+  ) +
+  
+  scale_x_date(
+    breaks = "1 month", 
+    labels = scales::date_format("%b-%Y")
+  ) +
+  
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
