@@ -1350,4 +1350,82 @@ write.csv(df_pred_mediana, "predicciones_intervalos.csv", row.names = FALSE)
 
 #### spline ####
 
+# 📌 Cargar librerías necesarias
+library(tidyverse)
+library(lubridate)
+library(splines)
+library(ggplot2)
+library(ggrepel)
 
+# 📌 Cargar los datos
+datos <- read.csv("tiempos_respuesta.csv", sep = ";")
+
+# 📌 Convertir la columna fecha a formato de fecha
+datos$fecha <- ymd_hms(datos$fecha)
+
+# 📌 Transformaciones y variables auxiliares
+datos_transformado <- datos %>%
+  mutate(
+    Dia = as.Date(fecha),
+    DiaSemana = weekdays(fecha, abbreviate = FALSE),
+    DiaCritico = ifelse(DiaSemana %in% c("jueves", "viernes"), 1, 0),
+    DiaNumerico = wday(fecha, label = FALSE, week_start = 1),
+    DiaNumericoMes = day(fecha),
+    MesNumerico = month(fecha),
+    SemanaNumerico = isoweek(fecha),
+    Anio = year(fecha)
+  )
+
+# 📌 Agrupar por día y calcular la mediana
+datos_agrupados <- datos_transformado %>%
+  group_by(Dia) %>%
+  summarise(
+    tiempo_respuesta_MEDIANA = median(tiempo_respuesta, na.rm = TRUE),
+    DiaSemana = first(DiaSemana),
+    DiaCritico = first(DiaCritico),
+    DiaNumerico = first(DiaNumerico),
+    DiaNumericoMes = first(DiaNumericoMes),
+    MesNumerico = first(MesNumerico),
+    SemanaNumerico = first(SemanaNumerico),
+    Anio = first(Anio)
+  ) %>%
+  ungroup()
+
+# 📌 Crear variables adicionales
+datos_agrupados <- datos_agrupados %>%
+  mutate(
+    Noviembre = ifelse(MesNumerico == 11, 1, 0),
+    mes = factor(ifelse(MesNumerico == 11, 12, MesNumerico)),
+    tiempo = as.numeric(Dia - min(Dia))
+  )
+
+# 📌 Ajustar el modelo de spline con mayor precisión
+spline_mod <- smooth.spline(datos_agrupados$tiempo, datos_agrupados$tiempo_respuesta_MEDIANA, spar = NULL)
+
+# 📌 Guardar el resumen del modelo spline
+sink("spline_mod_resumen.txt")
+summary(spline_mod)
+sink()
+
+# 📌 Generar gráfico con spline muy ajustado a los datos
+ggplot(datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA)) +
+  geom_line(color = "black", size = 1) +  # Línea de los datos originales
+  
+  # 📌 Línea del spline ajustado sobre los datos
+  geom_line(aes(x = Dia, y = predict(spline_mod)$y), color = "orange", size = 1) +
+  
+  # 📌 Títulos y etiquetas
+  labs(
+    title = "Spline Ajustado sobre los Datos Originales",
+    x = "Fecha", y = "Tiempo de Respuesta (Mediana)"
+  ) +
+  
+  # 📌 Ajuste del eje X
+  scale_x_date(
+    breaks = "1 month", 
+    labels = scales::date_format("%b-%Y")
+  ) +
+  
+  # 📌 Mejorar visibilidad
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
