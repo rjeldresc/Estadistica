@@ -1592,3 +1592,259 @@ ggplot() +
   
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+## modelo de series de tiempo
+## 2025-03-09
+
+
+# Instalar y cargar librerías necesarias
+install.packages(c("forecast", "lubridate", "dplyr", "ggplot2", "scales", "tseries"))
+library(forecast)
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(tseries)
+
+# Cargar los datos
+setwd("d:/dev/estadistica/Taller de investigacion/")  # Ajusta la ruta según tu directorio
+datos <- read.csv("tiempos_respuesta.csv", sep=";")
+
+# Convertir la fecha al formato adecuado
+datos$fecha <- ymd_hms(datos$fecha)
+
+# Agregar los datos por día (promedio diario)
+datos_diarios <- datos %>%
+  group_by(fecha = as.Date(fecha)) %>%
+  summarise(tiempo_respuesta = mean(tiempo_respuesta, na.rm = TRUE))
+
+# Crear variables dummy para la estacionalidad escalonada
+datos_diarios <- datos_diarios %>%
+  mutate(
+    mes = month(fecha),
+    segunda_quincena_nov = ifelse(mes == 11 & day(fecha) >= 15, 1, 0),
+    diciembre = ifelse(mes == 12, 1, 0),
+    cambio_anual = ifelse(month(fecha) == 1 & day(fecha) == 1, 1, 0) # Capturar saltos de año
+  )
+
+# Gráficos ACF y PACF antes de modelar
+par(mfrow=c(2,1))
+acf(datos_diarios$tiempo_respuesta, main="ACF - Serie Original")
+pacf(datos_diarios$tiempo_respuesta, main="PACF - Serie Original")
+par(mfrow=c(1,1))
+
+# Prueba de estacionaridad (Dickey-Fuller)
+adf_test <- adf.test(datos_diarios$tiempo_respuesta)
+print(adf_test)
+
+# Si la serie no es estacionaria, se diferencia
+if (adf_test$p.value > 0.05) {
+  datos_diarios$diff_respuesta <- c(NA, diff(datos_diarios$tiempo_respuesta))
+  
+  # Segunda prueba de estacionaridad
+  adf_test_diff <- adf.test(na.omit(datos_diarios$diff_respuesta))
+  print(adf_test_diff)
+  
+  # Gráficos ACF y PACF de la serie diferenciada
+  par(mfrow=c(2,1))
+  acf(na.omit(datos_diarios$diff_respuesta), main="ACF - Serie Diferenciada")
+  pacf(na.omit(datos_diarios$diff_respuesta), main="PACF - Serie Diferenciada")
+  par(mfrow=c(1,1))
+}
+
+# Ajustar un modelo SARIMAX más robusto para capturar los escalones
+modelo_sarimax <- auto.arima(datos_diarios$tiempo_respuesta,
+                             xreg = as.matrix(datos_diarios[, c("segunda_quincena_nov", "diciembre", "cambio_anual")]),
+                             seasonal = TRUE,
+                             stepwise = FALSE, approximation = FALSE)
+
+summary(modelo_sarimax)
+
+# Predicción hasta junio 2025
+fechas_pred <- seq(max(datos_diarios$fecha) + 1, by="day", length.out=210)  # 7 meses
+
+# Crear las variables dummy para la predicción
+pred_dummy <- data.frame(
+  fecha = fechas_pred,
+  segunda_quincena_nov = ifelse(month(fechas_pred) == 11 & day(fechas_pred) >= 15, 1, 0),
+  diciembre = ifelse(month(fechas_pred) == 12, 1, 0),
+  cambio_anual = ifelse(month(fechas_pred) == 1 & day(fechas_pred) == 1, 1, 0)
+)
+
+# Predicción con variables dummy
+prediccion_sarimax <- forecast(modelo_sarimax, 
+                               xreg = as.matrix(pred_dummy[, c("segunda_quincena_nov", "diciembre", "cambio_anual")]), 
+                               h = 210, level = c(95))
+
+# Corrección en la extracción de intervalos de confianza
+lower_95 <- if (!is.null(dim(prediccion_sarimax$lower))) prediccion_sarimax$lower[,1] else prediccion_sarimax$lower
+upper_95 <- if (!is.null(dim(prediccion_sarimax$upper))) prediccion_sarimax$upper[,1] else prediccion_sarimax$upper
+
+# Crear dataframe con predicciones
+datos_pred <- data.frame(
+  fecha = fechas_pred,
+  prediccion = prediccion_sarimax$mean,
+  lower_95 = lower_95,  
+  upper_95 = upper_95   
+)
+
+# Agregar etiquetas con los valores máximos, mínimos y predicción en ciertos puntos clave
+library(ggrepel)  # Para evitar sobreposición de textos
+
+# Seleccionar algunos puntos clave de la predicción para mostrar etiquetas
+datos_pred_label <- datos_pred %>% 
+  filter(day(fecha) == 1 & month(fecha) %% 2 == 0)  # Solo etiquetas en primeros días de meses pares
+
+# Crear gráfico mejorado
+ggplot() +
+  geom_line(data = datos_diarios, aes(x = fecha, y = tiempo_respuesta), color = "black", linewidth = 1) +
+  geom_line(data = datos_pred, aes(x = fecha, y = prediccion), color = "red", linewidth = 1) +
+  geom_ribbon(data = datos_pred, aes(x = fecha, ymin = lower_95, ymax = upper_95), 
+              fill = "blue", alpha = 0.3) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b-%Y") +  # Mejor eje X
+  labs(title = "Predicción del Tiempo de Respuesta con Intervalos de Confianza",
+       x = "Fecha", y = "Tiempo de Respuesta (ms)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  # Rotar etiquetas del eje X
+  geom_text_repel(data = datos_pred_label, 
+                  aes(x = fecha, y = lower_95, label = round(lower_95, 2)), 
+                  color = "blue", size = 4, nudge_y = -2) +  # Etiqueta límite inferior
+  geom_text_repel(data = datos_pred_label, 
+                  aes(x = fecha, y = upper_95, label = round(upper_95, 2)), 
+                  color = "blue", size = 4, nudge_y = 2) +  # Etiqueta límite superior
+  geom_text_repel(data = datos_pred_label, 
+                  aes(x = fecha, y = prediccion, label = round(prediccion, 2)), 
+                  color = "red", size = 4, nudge_y = 3)  # Etiqueta en la línea de predicción
+
+
+# Graficar la función de autocorrelación (ACF) para ver estacionalidad
+acf(datos_diarios$tiempo_respuesta, lag.max = 365, main = "ACF para detectar estacionalidad")
+
+
+# 1️⃣ Modelado de la Tendencia
+# Ajustar un modelo de regresión lineal para detectar tendencia
+modelo_tendencia <- lm(tiempo_respuesta ~ as.numeric(fecha), data = datos_diarios)
+
+# Graficar la tendencia
+ggplot(datos_diarios, aes(x = fecha, y = tiempo_respuesta)) +
+  geom_line(color = "black") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  labs(title = "Modelado de la Tendencia en la Serie de Tiempo",
+       x = "Fecha", y = "Tiempo de Respuesta (ms)") +
+  theme_minimal()
+
+
+#2️⃣ Análisis de Patrones Estacionales
+
+# Convertir la serie en formato ts con frecuencia anual (365 días)
+serie_ts <- ts(datos_diarios$tiempo_respuesta, frequency = 365, start = c(year(min(datos_diarios$fecha)), month(min(datos_diarios$fecha))))
+
+# Aplicar descomposición STL para analizar patrones estacionales
+descomposicion <- stl(serie_ts, s.window = "periodic")
+
+# Graficar la descomposición de la serie
+plot(descomposicion)
+
+#3️⃣ Análisis de Autocorrelación
+
+# Diferenciar la serie para eliminar tendencia y analizar la autocorrelación
+datos_diarios$diff_respuesta <- c(NA, diff(datos_diarios$tiempo_respuesta))
+
+# Graficar ACF y PACF
+par(mfrow=c(2,1))
+acf(na.omit(datos_diarios$diff_respuesta), main="ACF de la Serie Diferenciada")
+pacf(na.omit(datos_diarios$diff_respuesta), main="PACF de la Serie Diferenciada")
+par(mfrow=c(1,1))
+
+
+
+#4️⃣ Explicación de la Forma Escalonada
+
+# Calcular los cambios diarios absolutos
+datos_diarios$salto <- c(NA, abs(diff(datos_diarios$tiempo_respuesta)))
+
+# Filtrar los días con cambios grandes (ej. mayor a 5ms)
+cambios_fuertes <- datos_diarios %>% filter(salto > 5)
+
+# Mostrar los días donde ocurrieron cambios fuertes
+print(cambios_fuertes)
+
+
+#5️⃣ Tabla Final con los Parámetros del Modelo
+
+# Extraer los coeficientes del modelo SARIMA
+parametros_modelo <- data.frame(Coeficiente = coef(modelo_sarimax))
+parametros_modelo$Nombre <- rownames(parametros_modelo)
+
+# Extraer métricas del modelo
+metricas_modelo <- data.frame(
+  AIC = modelo_sarimax$aic,
+  BIC = modelo_sarimax$bic,
+  RMSE = sqrt(mean(residuals(modelo_sarimax)^2, na.rm = TRUE))
+)
+
+# Mostrar la tabla de parámetros del modelo
+print(parametros_modelo)
+
+# Mostrar la tabla de métricas del modelo
+print(metricas_modelo)
+
+
+#analisis adicional
+#1️⃣ Pruebas de Hipótesis en Modelos ARIMA/SARIMA
+
+# Cargar función de resumen del modelo
+source("summary.arima.R")
+
+# Calcular las pruebas de hipótesis para el modelo SARIMA ajustado
+resultado_pruebas <- summary_arima(modelo_sarimax, fixed = c(NA, NA))
+
+# Mostrar la tabla con los valores p
+print(resultado_pruebas)
+
+
+#2️⃣ Diagnóstico del Modelo ARIMA/SARIMA
+
+# Cargar funciones de diagnóstico
+source("TS.diag.R")
+
+# Evaluar la independencia de los residuos con Ljung-Box Test
+Box.Ljung.Test(modelo_sarimax$residuals, lag = 12)
+
+# Graficar el diagnóstico completo del modelo
+TS.diag(modelo_sarimax$residuals, lag = 12)
+
+
+#3️⃣ Explicación de la Forma Escalonada en la Serie
+
+# Calcular los cambios absolutos diarios
+datos_diarios$salto <- c(NA, abs(diff(datos_diarios$tiempo_respuesta)))
+
+# Filtrar los días con cambios grandes (mayores a 5ms)
+cambios_fuertes <- datos_diarios %>% filter(salto > 5)
+
+# Mostrar los días donde ocurrieron saltos grandes
+print(cambios_fuertes)
+
+# Graficar los saltos
+ggplot(datos_diarios, aes(x = fecha, y = salto)) +
+  geom_bar(stat = "identity", fill = "red") +
+  labs(title = "Días con Cambios Bruscos en el Tiempo de Respuesta",
+       x = "Fecha", y = "Cambio Absoluto en ms") +
+  theme_minimal()
+
+
+# Código en R para Diagnóstico del Modelo SARIMA
+# Cargar funciones de diagnóstico
+source("TS.diag.R")
+
+# Evaluar la independencia de los residuos con la prueba de Ljung-Box
+Box.Ljung.Test(modelo_sarimax$residuals, lag = 12)
+
+# Graficar el diagnóstico completo del modelo SARIMA
+TS.diag(modelo_sarimax$residuals, lag = 12)
+# Graficar el diagnóstico completo del modelo SARIMA con ajuste en los breaks
+TS.diag(modelo_sarimax$residuals, lag = 12, breaks = seq(-10, 10, 0.5))
+
