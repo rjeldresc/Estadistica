@@ -1600,7 +1600,7 @@ ggplot() +
 
 
 # Instalar y cargar librerías necesarias
-install.packages(c("forecast", "lubridate", "dplyr", "ggplot2", "scales", "tseries"))
+#install.packages(c("forecast", "lubridate", "dplyr", "ggplot2", "scales", "tseries"))
 library(forecast)
 library(lubridate)
 library(dplyr)
@@ -1848,3 +1848,79 @@ TS.diag(modelo_sarimax$residuals, lag = 12)
 # Graficar el diagnóstico completo del modelo SARIMA con ajuste en los breaks
 TS.diag(modelo_sarimax$residuals, lag = 12, breaks = seq(-10, 10, 0.5))
 
+summary(modelo_sarimax)
+
+#2025-03-13
+
+# Cargar librerías necesarias
+library(ggplot2)
+library(lubridate)
+library(dplyr)
+library(readr)
+
+# 📌 1. Cargar los datos desde el archivo CSV
+datos <- read.csv("tiempos_respuesta.csv", sep=";")
+
+# 📌 2. Convertir fechas al formato adecuado
+datos$fecha <- ymd_hms(datos$fecha)
+
+# 📌 3. Agrupar los datos por día y calcular la mediana del tiempo de respuesta
+datos_agrupados <- datos %>%
+  group_by(Dia = as.Date(fecha)) %>%
+  summarise(tiempo_respuesta_MEDIANA = median(tiempo_respuesta, na.rm = TRUE))
+
+# 📌 4. Ajustar modelo de regresión (simple y con efecto mes)
+datos_agrupados$tiempo <- as.numeric(datos_agrupados$Dia - min(datos_agrupados$Dia))
+
+mod <- lm(tiempo_respuesta_MEDIANA ~ tiempo, data = datos_agrupados)  # Modelo simple
+mod2 <- lm(tiempo_respuesta_MEDIANA ~ tiempo + month(Dia), data = datos_agrupados)  # Modelo con efecto mes
+
+# 📌 5. Generar predicciones para el futuro (2025)
+fechas_prediccion <- seq(max(datos_agrupados$Dia) + 1, by = "day", length.out = 180)  # Predicción de 6 meses
+
+# 📌 6. Crear tabla de predicción asegurando que las columnas coincidan con las del modelo
+tabla_prediccion <- data.frame(
+  Dia = fechas_prediccion,  # Se define Dia en lugar de Fecha
+  tiempo = as.numeric(fechas_prediccion - min(datos_agrupados$Dia)),  # Se mantiene la misma referencia de tiempo
+  mes = month(fechas_prediccion)  # Se calcula el mes para cada predicción
+)
+
+# 📌 Agregar una columna con valores representativos para cada mes (primer día de cada mes)
+tabla_prediccion_labels <- tabla_prediccion %>%
+  filter(day(Dia) == 1)  # Solo seleccionar los primeros días del mes
+
+# 📌 Generar gráfico con etiquetas
+ggplot() +
+  # Línea negra: Datos históricos observados
+  geom_line(data = datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA), color = "black") +
+  
+  # Línea roja: Ajuste del modelo de regresión con efecto mes
+  geom_line(data = datos_agrupados, aes(x = Dia, y = mod2$fitted.values), color = "red", size = 1.2) +
+  
+  # Línea azul: Predicción para el futuro (2025)
+  geom_line(data = tabla_prediccion, aes(x = Dia, y = prediccion), color = "blue", size = 1.2) +
+  
+  # 📌 Agregar etiquetas con los valores predichos (solo el primer día de cada mes)
+  geom_text(data = tabla_prediccion_labels, 
+            aes(x = Dia, y = prediccion, label = round(prediccion, 1)), 
+            color = "blue", size = 4, vjust = -1) +  # Ajustar la posición de las etiquetas
+  
+  # 📌 Etiquetas de meses clave en el eje X
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month") +
+  
+  # Títulos y etiquetas
+  labs(
+    title = "Predicción de Tiempos de Respuesta para 2024-2025",
+    x = "Fecha",
+    y = "Tiempo de Respuesta (Mediana)"
+  ) +
+  
+  # Mejorar la presentación del gráfico
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Rotar etiquetas del eje X
+    plot.title = element_text(hjust = 0.5, size = 14)   # Centrar el título
+  )
+
+
+summary(mod2)
