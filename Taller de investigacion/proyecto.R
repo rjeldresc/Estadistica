@@ -1924,3 +1924,109 @@ ggplot() +
 
 
 summary(mod2)
+
+
+# 2025-03-14
+#construccion del spline
+
+
+# Cargar librerías necesarias
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(ggrepel)  # Para etiquetas sin superposición
+library(readr)   # Para guardar la tabla en CSV
+library(tseries) # Para pruebas de estacionaridad
+library(lmtest)  # Para pruebas de significancia
+
+# Cargar los datos
+setwd("d:/dev/estadistica/Taller de investigacion/")  # Ajusta la ruta si es necesario
+datos <- read.csv("tiempos_respuesta.csv", sep=";")
+
+# Convertir la columna fecha a formato datetime
+datos$fecha <- ymd_hms(datos$fecha)
+
+# Agrupar por día y calcular la mediana
+datos_agrupados <- datos %>%
+  mutate(Dia = as.Date(fecha)) %>% # Extraer la fecha sin hora
+  group_by(Dia) %>%               # Agrupar por día
+  summarise(
+    tiempo_respuesta_MEDIANA = median(tiempo_respuesta, na.rm = TRUE) # Mediana del tiempo de respuesta
+  ) %>%
+  ungroup() # Desagrupar
+
+# Filtrar los datos hasta la fecha 2024-11-11
+datos_agrupados <- datos_agrupados %>%
+  filter(Dia <= as.Date("2024-11-11"))
+
+# Normalizar el eje X (convertir fechas en valores numéricos relativos al inicio)
+datos_agrupados <- datos_agrupados %>%
+  mutate(Dia_num = as.numeric(Dia - min(Dia)))
+
+# Ajustar el modelo de spline con control de suavizado
+spline_mod <- smooth.spline(datos_agrupados$Dia_num, datos_agrupados$tiempo_respuesta_MEDIANA, spar = 0.3)
+
+# Crear nuevas fechas de predicción
+fechas_prediccion <- seq(from = as.Date("2024-11-12"), to = as.Date("2025-06-30"), by = "days")
+fechas_prediccion_num <- as.numeric(fechas_prediccion - min(datos_agrupados$Dia))
+
+# Obtener predicciones del modelo spline
+predicciones <- predict(spline_mod, fechas_prediccion_num)
+
+# Crear intervalos de confianza (estimados usando una desviación estándar fija para este caso)
+std_error <- sd(datos_agrupados$tiempo_respuesta_MEDIANA - predict(spline_mod, datos_agrupados$Dia_num)$y)
+conf_interval <- 1.96 * std_error  # Intervalo de confianza al 95%
+
+# Construir data frame para visualización
+df_predicciones <- data.frame(
+  Dia = fechas_prediccion,
+  tiempo_respuesta_MEDIANA = predicciones$y,
+  IC_superior = predicciones$y + conf_interval,
+  IC_inferior = predicciones$y - conf_interval
+)
+
+# Guardar la tabla de predicciones en un archivo CSV
+write_csv(df_predicciones, "predicciones_spline.csv")
+
+# Prueba de estacionaridad de Dickey-Fuller aumentada (ADF)
+adf_test <- adf.test(datos_agrupados$tiempo_respuesta_MEDIANA)
+print(adf_test)
+
+# Prueba de heterocedasticidad de Breusch-Pagan
+lm_model <- lm(tiempo_respuesta_MEDIANA ~ Dia_num, data = datos_agrupados)
+bp_test <- bptest(lm_model)
+print(bp_test)
+
+# Prueba de normalidad de los residuos
+shapiro_test <- shapiro.test(lm_model$residuals)
+print(shapiro_test)
+
+# Prueba de independencia de los residuos (Durbin-Watson)
+dw_test <- dwtest(lm_model)
+print(dw_test)
+
+# Crear el gráfico con ggplot2
+ggplot() +
+  # Datos históricos
+  geom_line(data = datos_agrupados, aes(x = Dia, y = tiempo_respuesta_MEDIANA), color = "black") +
+  
+  # Línea del modelo spline
+  geom_line(data = df_predicciones, aes(x = Dia, y = tiempo_respuesta_MEDIANA), color = "blue", linetype = "dashed", linewidth = 1.2) +
+  
+  # Intervalos de confianza
+  geom_ribbon(data = df_predicciones, aes(x = Dia, ymin = IC_inferior, ymax = IC_superior), fill = "blue", alpha = 0.2) +
+  
+  # Agregar etiquetas con valores en milisegundos
+  geom_text_repel(data = df_predicciones %>% filter(Dia %in% seq(min(Dia), max(Dia), by = "30 days")),
+                  aes(x = Dia, y = tiempo_respuesta_MEDIANA, label = round(tiempo_respuesta_MEDIANA, 1)),
+                  color = "blue", size = 4) +
+  
+  labs(
+    title = "Predicción del Tiempo de Respuesta con Spline e Intervalos de Confianza",
+    x = "Fecha", y = "Tiempo de Respuesta (Mediana) (ms)"
+  ) +
+  scale_x_date(
+    breaks = "1 month",  # Establecer las marcas cada mes
+    labels = scales::date_format("%b-%Y")  # Formato mes-año
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Incluir rotación de etiquetas

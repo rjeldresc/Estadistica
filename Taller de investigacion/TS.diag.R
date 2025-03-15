@@ -30,7 +30,7 @@ Box.Ljung.Test = function (z, lag = NULL, main = NULL, col = "black", border = "
 ## TS.diag ##
 #############
 
-TS.diag = function(X, col = "gray", border = "darkblue", breaks = seq(-10,10,1), lag = 24){
+TS.diag = function(X, col = "gray", border = "darkblue", breaks = seq(min(scale(X), na.rm = TRUE), max(scale(X), na.rm = TRUE), length.out = 30), lag = 24){
 par(mfrow = c(2,3), bty = "n", las = 1)
 Box.Ljung.Test(X, lag = lag, col = col, border = border)
 axis(1, 0:lag)

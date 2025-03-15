@@ -1,0 +1,106 @@
+
+Call:
+lm(formula = tiempo_respuesta_MEDIANA ~ (tiempo * mes * Anio) * 
+    Noviembre, data = datos_agrupados)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-8.2616 -0.1219 -0.0020  0.1220  8.4159 
+
+Coefficients: (40 not defined because of singularities)
+                              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                 -3.701e+04  2.167e+04  -1.707   0.0882 .  
+tiempo                       1.710e+01  7.047e+01   0.243   0.8083    
+mes2                         9.862e+03  3.379e+04   0.292   0.7705    
+mes3                         3.482e+03  3.323e+04   0.105   0.9166    
+mes4                         5.593e+03  3.574e+04   0.156   0.8757    
+mes5                         1.551e+04  3.617e+04   0.429   0.6682    
+mes6                         5.951e+03  3.903e+04   0.152   0.8789    
+mes7                         2.006e+04  3.937e+04   0.510   0.6106    
+mes8                         8.742e+03  4.107e+04   0.213   0.8315    
+mes9                        -6.515e+03  4.440e+04  -0.147   0.8834    
+mes10                        4.658e+03  4.454e+04   0.105   0.9167    
+mes12                        5.546e+03  2.946e+04   0.188   0.8507    
+Anio                         1.835e+01  1.071e+01   1.713   0.0872 .  
+Noviembre                    4.582e+05  2.589e+04  17.696   <2e-16 ***
+tiempo:mes2                 -2.295e+01  1.066e+02  -0.215   0.8297    
+tiempo:mes3                 -1.341e+01  9.965e+01  -0.135   0.8930    
+tiempo:mes4                 -2.060e+01  1.022e+02  -0.202   0.8403    
+tiempo:mes5                 -3.745e+01  9.965e+01  -0.376   0.7072    
+tiempo:mes6                 -2.330e+01  1.022e+02  -0.228   0.8197    
+tiempo:mes7                 -5.117e+01  9.965e+01  -0.513   0.6078    
+tiempo:mes8                 -2.819e+01  9.965e+01  -0.283   0.7773    
+tiempo:mes9                 -3.985e+00  1.022e+02  -0.039   0.9689    
+tiempo:mes10                -2.191e+01  9.965e+01  -0.220   0.8261    
+tiempo:mes12                -2.449e+01  9.963e+01  -0.246   0.8059    
+tiempo:Anio                 -8.454e-03  3.482e-02  -0.243   0.8083    
+mes2:Anio                   -4.875e+00  1.670e+01  -0.292   0.7705    
+mes3:Anio                   -1.720e+00  1.642e+01  -0.105   0.9166    
+mes4:Anio                   -2.763e+00  1.767e+01  -0.156   0.8758    
+mes5:Anio                   -7.665e+00  1.788e+01  -0.429   0.6683    
+mes6:Anio                   -2.939e+00  1.929e+01  -0.152   0.8790    
+mes7:Anio                   -9.911e+00  1.946e+01  -0.509   0.6107    
+mes8:Anio                   -4.318e+00  2.030e+01  -0.213   0.8316    
+mes9:Anio                    3.225e+00  2.195e+01   0.147   0.8832    
+mes10:Anio                  -2.298e+00  2.201e+01  -0.104   0.9169    
+mes12:Anio                  -2.728e+00  1.456e+01  -0.187   0.8515    
+tiempo:Noviembre             1.541e+01  7.045e+01   0.219   0.8269    
+mes2:Noviembre                      NA         NA      NA       NA    
+mes3:Noviembre                      NA         NA      NA       NA    
+mes4:Noviembre                      NA         NA      NA       NA    
+mes5:Noviembre                      NA         NA      NA       NA    
+mes6:Noviembre                      NA         NA      NA       NA    
+mes7:Noviembre                      NA         NA      NA       NA    
+mes8:Noviembre                      NA         NA      NA       NA    
+mes9:Noviembre                      NA         NA      NA       NA    
+mes10:Noviembre                     NA         NA      NA       NA    
+mes12:Noviembre                     NA         NA      NA       NA    
+Anio:Noviembre              -2.266e+02  1.281e+01 -17.696   <2e-16 ***
+tiempo:mes2:Anio             1.134e-02  5.269e-02   0.215   0.8296    
+tiempo:mes3:Anio             6.626e-03  4.925e-02   0.135   0.8930    
+tiempo:mes4:Anio             1.018e-02  5.051e-02   0.202   0.8403    
+tiempo:mes5:Anio             1.851e-02  4.925e-02   0.376   0.7071    
+tiempo:mes6:Anio             1.152e-02  5.051e-02   0.228   0.8197    
+tiempo:mes7:Anio             2.529e-02  4.925e-02   0.514   0.6077    
+tiempo:mes8:Anio             1.393e-02  4.925e-02   0.283   0.7773    
+tiempo:mes9:Anio             1.969e-03  5.051e-02   0.039   0.9689    
+tiempo:mes10:Anio            1.083e-02  4.925e-02   0.220   0.8261    
+tiempo:mes12:Anio            1.211e-02  4.925e-02   0.246   0.8058    
+tiempo:mes2:Noviembre               NA         NA      NA       NA    
+tiempo:mes3:Noviembre               NA         NA      NA       NA    
+tiempo:mes4:Noviembre               NA         NA      NA       NA    
+tiempo:mes5:Noviembre               NA         NA      NA       NA    
+tiempo:mes6:Noviembre               NA         NA      NA       NA    
+tiempo:mes7:Noviembre               NA         NA      NA       NA    
+tiempo:mes8:Noviembre               NA         NA      NA       NA    
+tiempo:mes9:Noviembre               NA         NA      NA       NA    
+tiempo:mes10:Noviembre              NA         NA      NA       NA    
+tiempo:mes12:Noviembre              NA         NA      NA       NA    
+tiempo:Anio:Noviembre       -7.316e-03  3.483e-02  -0.210   0.8337    
+mes2:Anio:Noviembre                 NA         NA      NA       NA    
+mes3:Anio:Noviembre                 NA         NA      NA       NA    
+mes4:Anio:Noviembre                 NA         NA      NA       NA    
+mes5:Anio:Noviembre                 NA         NA      NA       NA    
+mes6:Anio:Noviembre                 NA         NA      NA       NA    
+mes7:Anio:Noviembre                 NA         NA      NA       NA    
+mes8:Anio:Noviembre                 NA         NA      NA       NA    
+mes9:Anio:Noviembre                 NA         NA      NA       NA    
+mes10:Anio:Noviembre                NA         NA      NA       NA    
+mes12:Anio:Noviembre                NA         NA      NA       NA    
+tiempo:mes2:Anio:Noviembre          NA         NA      NA       NA    
+tiempo:mes3:Anio:Noviembre          NA         NA      NA       NA    
+tiempo:mes4:Anio:Noviembre          NA         NA      NA       NA    
+tiempo:mes5:Anio:Noviembre          NA         NA      NA       NA    
+tiempo:mes6:Anio:Noviembre          NA         NA      NA       NA    
+tiempo:mes7:Anio:Noviembre          NA         NA      NA       NA    
+tiempo:mes8:Anio:Noviembre          NA         NA      NA       NA    
+tiempo:mes9:Anio:Noviembre          NA         NA      NA       NA    
+tiempo:mes10:Anio:Noviembre         NA         NA      NA       NA    
+tiempo:mes12:Anio:Noviembre         NA         NA      NA       NA    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.226 on 683 degrees of freedom
+Multiple R-squared:  0.9829,	Adjusted R-squared:  0.9818 
+F-statistic: 836.8 on 47 and 683 DF,  p-value: < 2.2e-16
+
